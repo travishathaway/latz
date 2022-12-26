@@ -1,2 +1,3 @@
 # latz
+
 CLI tool for finding images online; maybe by location too...

@@ -1,0 +1,10 @@
+name: latz
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pillow>=9.3.0
+  - httpx
+  - click
+  - pydantic
+  - pluggy
