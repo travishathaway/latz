@@ -1,4 +1,4 @@
-black
+darker
 flake8
 mypy
 pyupgrade
