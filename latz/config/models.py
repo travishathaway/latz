@@ -3,7 +3,7 @@ from pydantic import BaseSettings, Field
 from ..constants import ENV_PREFIX
 
 
-class AppConfig(BaseSettings):
+class BaseAppConfig(BaseSettings):
     """
     Holds all settings for the latz application. These are parsed from
     config files, command line arguments and environment variables.

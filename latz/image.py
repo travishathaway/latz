@@ -32,3 +32,12 @@ class ImageAPI(abc.ABC):
     @abc.abstractmethod
     def download(self, image_id: str, path: Path) -> None:
         ...
+
+    @classmethod
+    @abc.abstractmethod
+    def create(cls, config) -> "ImageAPI":
+        """
+        Use this as a factory function for creating new classes with values from the application
+        configuration.
+        """
+        ...

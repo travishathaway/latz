@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import NamedTuple, Any
 
 from pydantic import BaseModel
 
@@ -14,4 +14,4 @@ class ImageAPIPlugin(NamedTuple):
 
     name: str
     backend: type[ImageAPI]
-    config: type[BaseModel]
+    config_fields: dict[str, tuple[type[BaseModel], Any]]

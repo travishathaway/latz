@@ -15,7 +15,7 @@ def format_validation_error(exc: ValidationError, path: Path) -> str:
     """
     error_str = []
     for err in exc.errors():
-        loc = ",".join(err.get("loc", tuple()))
+        loc = ",".join(err.get("loc", tuple()))  # type: ignore
         ctx = err.get("ctx", {})
         given = ctx.get("given")
         permitted = ctx.get("permitted")

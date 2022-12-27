@@ -14,6 +14,11 @@ class UnsplashBackendConfig(BaseModel):
     secret_key: str = Field(description="Secret for the Unsplash API")
 
 
+CONFIG_FIELDS = {
+    "unsplash_config": (UnsplashBackendConfig, {"access_key": "", "secret_key": ""})
+}
+
+
 class UnsplashImageAPI(ImageAPI):
     def __init__(self, client_id: str):
         self.client_id = client_id
@@ -34,6 +39,10 @@ class UnsplashImageAPI(ImageAPI):
     def download(self, image_id: str, path: Path) -> None:
         print("Downloading")
 
+    @classmethod
+    def create(cls, config) -> "UnsplashImageAPI":
+        return cls(config.unsplash_config.access_key)
+
 
 @hookimpl
 def image_search_api():
@@ -41,5 +50,5 @@ def image_search_api():
     Registers our Unsplash image API backend
     """
     return ImageAPIPlugin(
-        name="unsplash", backend=UnsplashImageAPI, config=UnsplashBackendConfig
+        name="unsplash", backend=UnsplashImageAPI, config_fields=CONFIG_FIELDS
     )

@@ -1,8 +1,4 @@
-from typing import cast
-
 import click
-
-from ..config.models import AppConfig
 
 
 @click.command("get")
@@ -12,7 +8,7 @@ def command(ctx, search: str):
     """
     Command that retrieves an image based on a search term
     """
-    config = cast(AppConfig, ctx.obj.config)
+    config = ctx.obj.config
 
     print(config.backend)
     print(search)
