@@ -1,13 +1,14 @@
-from typing import NamedTuple, Literal
+import abc
+from typing import Literal, NamedTuple
+from pathlib import Path
+
 
 ImageTypes = Literal["png", "jpeg", "webp"]
 
 
 class ImageSearchResult(NamedTuple):
     url: str
-    image_type: ImageTypes
     description: str
-    search_term: str
 
 
 class ImageSearchResultSet(NamedTuple):
@@ -15,15 +16,19 @@ class ImageSearchResultSet(NamedTuple):
     number_results: int
 
 
-def search(search_term: str) -> ImageSearchResultSet:
+class ImageAPI(abc.ABC):
     """
-    Find images based on a ``search_term`` and return an ``ImageSearchResultSet``
+    Abstract base class for the Image API
     """
-    img_1 = ImageSearchResult(
-        "https://travishathaway.com/image_1.png", "png", "test one", search_term
-    )
-    img_2 = ImageSearchResult(
-        "https://travishathaway.com/image_2.jpg", "jpeg", "test two", search_term
-    )
 
-    return ImageSearchResultSet((img_1, img_2), 2)
+    @abc.abstractmethod
+    def search(self, search_term: str) -> ImageSearchResultSet:
+        ...
+
+    @abc.abstractmethod
+    def get(self, image_id: str) -> ImageSearchResult:
+        ...
+
+    @abc.abstractmethod
+    def download(self, image_id: str, path: Path) -> None:
+        ...

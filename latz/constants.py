@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
 
+#: Name of the application
+APP_NAME = "latz"
+
 #: Prefix used for environment variables
 ENV_PREFIX = "LATZ_"
 
