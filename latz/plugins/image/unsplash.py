@@ -7,15 +7,26 @@ from ..hookspec import hookimpl
 from ..types import ImageAPIPlugin
 
 
-class UnsplashBackendConfig(BaseModel):
-    """"""
+PLUGIN_NAME = "unsplash"
 
-    access_key: str = Field(description="Access for the Unsplash API")
-    secret_key: str = Field(description="Secret for the Unsplash API")
+
+class UnsplashBackendConfig(BaseModel):
+    """
+    Unsplash requires the usage of an ``access_key`` and ``secret_key``
+    when using their API. We expose these settings here so users of the CLI
+    tool can use it.
+    """
+
+    access_key: str = Field(description="Access key for the Unsplash API")
+
+    secret_key: str = Field(description="Secret key for the Unsplash API")
 
 
 CONFIG_FIELDS = {
-    "unsplash_config": (UnsplashBackendConfig, {"access_key": "", "secret_key": ""})
+    f"{PLUGIN_NAME}_config": (
+        UnsplashBackendConfig,
+        {"access_key": "", "secret_key": ""},
+    )
 }
 
 
@@ -37,10 +48,13 @@ class UnsplashImageAPI(ImageAPI):
         return ImageSearchResult("https://travishathaway.com", "png")
 
     def download(self, image_id: str, path: Path) -> None:
-        print("Downloading")
+        print("Downloading...")
 
     @classmethod
     def create(cls, config) -> "UnsplashImageAPI":
+        """
+        Factory method used to create this object by using values from the configuration object.
+        """
         return cls(config.unsplash_config.access_key)
 
 
@@ -50,5 +64,5 @@ def image_search_api():
     Registers our Unsplash image API backend
     """
     return ImageAPIPlugin(
-        name="unsplash", backend=UnsplashImageAPI, config_fields=CONFIG_FIELDS
+        name=PLUGIN_NAME, backend=UnsplashImageAPI, config_fields=CONFIG_FIELDS
     )

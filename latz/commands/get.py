@@ -1,4 +1,8 @@
+from typing import cast
+
 import click
+
+from ..image import ImageAPI
 
 
 @click.command("get")
@@ -8,7 +12,8 @@ def command(ctx, search: str):
     """
     Command that retrieves an image based on a search term
     """
-    config = ctx.obj.config
+    image_search_api = cast(ImageAPI, ctx.obj.image_search_api)
 
-    print(config.backend)
-    print(search)
+    results = image_search_api.search(search)
+
+    print(results)
