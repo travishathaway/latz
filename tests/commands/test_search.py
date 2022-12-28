@@ -25,5 +25,3 @@ def test_get_command_error_on_no_search_term(runner: CliRunner):
     result = runner.invoke(cli, [COMMAND])
 
     assert result.exit_code == 2
-
-    assert "Usage: cli search [OPTIONS] QUERY" in result.stdout
