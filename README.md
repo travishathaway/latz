@@ -79,3 +79,7 @@ _coming soon_ 😉
 ### Available image search backends
 
 _coming soon_ 😉
+
+### How to extend and write your own image search backen
+
+_coming soon_ 😉

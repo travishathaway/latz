@@ -8,7 +8,7 @@ from ..constants import APP_NAME
 from ..config.models import BaseAppConfig
 from ..image import ImageAPI
 from .hookspec import AppHookSpecs
-from .image import unsplash
+from .image import unsplash, dummy
 
 
 class AppPluginManager(PluginManager):
@@ -89,7 +89,7 @@ class AppPluginManager(PluginManager):
         if image_api_context_manager is None:
             raise ClickException(
                 "Backend has been improperly configured. Please choose from the available"
-                f" backends: {','.join(self.image_api_names)}"
+                f" backends: {', '.join(self.image_api_names)}"
             )
 
         return image_api_context_manager
@@ -107,8 +107,9 @@ def get_plugin_manager() -> AppPluginManager:
     # Adds plugin hooks
     plugin_manager.add_hookspecs(AppHookSpecs)
 
-    # Registers the internal plugin hook
+    # Registers internal plugin hooks
     plugin_manager.register(unsplash)
+    plugin_manager.register(dummy)
 
     # This is the magic that allows our application to discover other plugins
     # installed alongside it

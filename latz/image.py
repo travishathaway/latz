@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import abc
 from typing import Literal, NamedTuple
-from pathlib import Path
 
 
 ImageTypes = Literal["png", "jpeg", "webp"]
@@ -49,10 +48,4 @@ class ImageAPI(abc.ABC):
     def search(self, query: str) -> ImageSearchResultSet:
         """
         Used to search for an image via a search term and then return a single result set
-        """
-
-    @abc.abstractmethod
-    def download(self, url: str, path: Path) -> None:
-        """
-        Used to download images to a local computer.
         """

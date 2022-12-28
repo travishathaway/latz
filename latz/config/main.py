@@ -72,10 +72,18 @@ def get_app_config(
 
     :raises ClickException: Happens when any errors are encountered during config parsing
     """
+    existing_paths = tuple(path for path in paths if path.is_file())
+
+    if not existing_paths:
+        return model_class()
+
     # Parse JSON objects
     json_data_and_path, parse_errors = tuple(
-        zip(*(parse_config_file_as_json(path) for path in paths if path.is_file()))
+        zip(*(parse_config_file_as_json(path) for path in existing_paths))
     )
+
+    if not json_data_and_path:
+        return model_class()
 
     # Parse AppConfig objects
     app_configs, config_parse_errors = tuple(

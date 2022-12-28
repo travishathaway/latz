@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import urllib.parse
-from pathlib import Path
 
 import click
-import httpx
+from httpx import Client, HTTPError, Headers
 from pydantic import BaseModel, Field
 
 from ...image import (
@@ -52,8 +51,8 @@ class UnsplashImageAPI(ImageAPI):
         """We use this initialization method to properly configure the ``httpx.Client`` object"""
         self._client_id = client_id
         self._headers = {"Authorization": f"Client-ID {client_id}"}
-        self._client: httpx.Client = client
-        self._client.headers = httpx.Headers(self._headers)
+        self._client: Client = client
+        self._client.headers = Headers(self._headers)
 
     def search(self, query: str) -> ImageSearchResultSet:
         """
@@ -64,7 +63,7 @@ class UnsplashImageAPI(ImageAPI):
 
         try:
             resp.raise_for_status()
-        except httpx.HTTPError as exc:
+        except HTTPError as exc:
             raise click.ClickException(str(exc))
 
         json_data = resp.json()
@@ -80,9 +79,6 @@ class UnsplashImageAPI(ImageAPI):
 
         return ImageSearchResultSet(search_results, json_data.get("total"))
 
-    def download(self, url: str, path: Path) -> None:
-        print("Downloading...")
-
 
 class UnsplashImageAPIContextManager(ImageAPIContextManager):
     """
@@ -92,7 +88,7 @@ class UnsplashImageAPIContextManager(ImageAPIContextManager):
     """
 
     def __enter__(self) -> UnsplashImageAPI:
-        self.__client = httpx.Client()
+        self.__client = Client()
         return UnsplashImageAPI(self._config.unsplash_config.access_key, self.__client)
 
     def __exit__(self, exc_type, exc_val, exc_tb):

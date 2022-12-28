@@ -47,7 +47,3 @@ def cli(ctx):
 
 
 cli.add_command(search_command)
-
-
-if __name__ == "__main__":
-    cli()
