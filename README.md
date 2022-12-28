@@ -7,7 +7,7 @@
 [anaconda.org]: https://anaconda.org
 
 This is a command line tool used for retrieving images from various image
-search backends. This tool is primarily developed for educational purposes
+search backends (e.g. Unsplash, Google). This tool is primarily developed for educational purposes
 to show people how to develop plugin friendly Python applications. Furthermore,
 it is an example project that shows how to effectively pair a handful of
 popular Python libraries to write command line applications.
@@ -16,7 +16,7 @@ To facilitate our plugin architecture, the [pluggy][pluggy] library is used.
 Other libraries used include the following:
 
 - [click][click]: used for structuring the command line application 🖱 💻
-- [pydantic][pydantic]: used for handling configuration and config file validation 🗃
+- [pydantic][pydantic]: used for handling configuration file validation 🗃
 - [rich][rich]: used for UX/UI elements and generally making the application more pretty 🌈
 
 ### Why "latz"

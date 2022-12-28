@@ -4,7 +4,7 @@ from typing import NamedTuple, Any
 
 from pydantic import BaseModel
 
-from ..image import ImageAPI
+from ..image import ImageAPIContextManager
 
 
 class ImageAPIPlugin(NamedTuple):
@@ -13,5 +13,5 @@ class ImageAPIPlugin(NamedTuple):
     """
 
     name: str
-    backend: type[ImageAPI]
+    image_api_context_manager: type[ImageAPIContextManager]
     config_fields: dict[str, tuple[type[BaseModel], Any]]

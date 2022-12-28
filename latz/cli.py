@@ -4,7 +4,7 @@ from typing import cast
 import rich_click as click
 from pydantic import create_model
 
-from .commands import get_command
+from .commands import search_command
 from .config import get_app_config, BaseAppConfig
 from .constants import CONFIG_FILES
 from .plugins.manager import get_plugin_manager
@@ -29,7 +29,7 @@ def cli(ctx):
         type[BaseAppConfig],
         create_model(
             "AppConfig",
-            **plugin_manager.image_search_api_config_fields,
+            **plugin_manager.image_api_config_fields,
             __base__=BaseAppConfig
         ),
     )
@@ -41,10 +41,12 @@ def cli(ctx):
     # Attach several properties to click's ``ctx`` object so that we have access to it
     # in our sub-commands.
     ctx.obj.config = app_config
-    ctx.obj.image_search_api = plugin_manager.get_current_image_search_api(app_config)
+    ctx.obj.image_api_context_manager = plugin_manager.get_image_api_context_manager(
+        app_config
+    )
 
 
-cli.add_command(get_command)
+cli.add_command(search_command)
 
 
 if __name__ == "__main__":

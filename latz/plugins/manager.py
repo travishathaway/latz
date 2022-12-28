@@ -19,16 +19,16 @@ class AppPluginManager(PluginManager):
 
     def __init__(self, *args, **kwargs):
         # We use this to cache the value of
-        self.__image_search_api_names = None
+        self.__image_api_names = None
 
         super().__init__(*args, **kwargs)
 
     def reset_cache(self) -> None:
         """Resets all cached properties"""
-        self.__image_search_api_names = None
+        self.__image_api_names = None
 
     @property
-    def image_search_api_names(self) -> tuple[str, ...]:
+    def image_api_names(self) -> tuple[str, ...]:
         """
         Get the names of available image search apis that are currently configured.
         We cache this once per run.
@@ -38,13 +38,13 @@ class AppPluginManager(PluginManager):
         :raises ClickException: Raised if duplicate values are found (same plugin
                                 is registered multiple times)
         """
-        if self.__image_search_api_names is not None:
-            return self.__image_search_api_names
+        if self.__image_api_names is not None:
+            return self.__image_api_names
 
-        self.__image_search_api_names = tuple(
-            image_search_api.name for image_search_api in self.hook.image_search_api()
+        self.__image_api_names = tuple(
+            image_search_api.name for image_search_api in self.hook.image_api()
         )
-        names_counter = Counter(self.__image_search_api_names)
+        names_counter = Counter(self.__image_api_names)
         duplicates = tuple(value for value, count in names_counter.items() if count > 1)
 
         if len(duplicates) > 0:
@@ -53,10 +53,10 @@ class AppPluginManager(PluginManager):
                 f"{', '.join(duplicates)}"
             )
 
-        return self.__image_search_api_names
+        return self.__image_api_names
 
     @property
-    def image_search_api_config_fields(self) -> dict:
+    def image_api_config_fields(self) -> dict:
         """
         Returns all the registered config fields for the image_search_api plugins.
         We perform a merge of all registered ``config_fields`` dictionaries that represent
@@ -68,31 +68,31 @@ class AppPluginManager(PluginManager):
             lambda dict_one, dict_two: {**dict_one, **dict_two},
             (
                 image_search_api.config_fields
-                for image_search_api in self.hook.image_search_api()
+                for image_search_api in self.hook.image_api()
             ),
         )
 
-    def get_current_image_search_api(self, app_config: BaseAppConfig) -> ImageAPI:
+    def get_image_api_context_manager(self, app_config: BaseAppConfig) -> ImageAPI:
         """
-        Gets the currently configured ImageAPI class based on the passed in ``app_config``
-        object.
+        Gets the currently configured api_context_manager. This is a context manager
+        that we can use to give us an ``ImageAPI`` object.
 
         :param app_config: Current app config object
-        :raises ClickException: Raised if we cannot find an ImageAPI object to return
+        :raises ClickException: Raised if we cannot find an api_context_manager object to return
         """
-        image_search_api = None
+        image_api_context_manager = None
 
-        for search_api in self.hook.image_search_api():
-            if search_api.name == app_config.backend:
-                image_search_api = search_api.backend.create(app_config)
+        for api in self.hook.image_api():
+            if api.name == app_config.backend:
+                image_api_context_manager = api.image_api_context_manager
 
-        if image_search_api is None:
+        if image_api_context_manager is None:
             raise ClickException(
-                "Backend has been improperly configure. Please choose from the available"
-                f" backends: {','.join(self.image_search_api_names)}"
+                "Backend has been improperly configured. Please choose from the available"
+                f" backends: {','.join(self.image_api_names)}"
             )
 
-        return image_search_api
+        return image_api_context_manager
 
 
 def get_plugin_manager() -> AppPluginManager:

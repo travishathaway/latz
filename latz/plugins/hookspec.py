@@ -13,7 +13,7 @@ class AppHookSpecs:
     """Holds all hookspecs for this application"""
 
     @hookspec
-    def image_search_api(self) -> Iterable[ImageAPIPlugin]:
+    def image_api(self) -> Iterable[ImageAPIPlugin]:
         """
         TODO: add example
         """

@@ -1,8 +1,18 @@
+from __future__ import annotations
+
+import urllib.parse
 from pathlib import Path
 
+import click
+import httpx
 from pydantic import BaseModel, Field
 
-from ...image import ImageAPI, ImageSearchResult, ImageSearchResultSet
+from ...image import (
+    ImageAPI,
+    ImageSearchResult,
+    ImageSearchResultSet,
+    ImageAPIContextManager,
+)
 from ..hookspec import hookimpl
 from ..types import ImageAPIPlugin
 
@@ -31,38 +41,71 @@ CONFIG_FIELDS = {
 
 
 class UnsplashImageAPI(ImageAPI):
-    def __init__(self, client_id: str):
-        self.client_id = client_id
-        self._headers = {"Authorization": f"Client-ID {client_id}"}
+    """
+    Implementation of ImageAPI for use with the Unsplash API: https://unsplash.com/documentation
+    """
 
-    def search(self, search_term: str) -> ImageSearchResultSet:
+    #: Base URL for the Unsplash API
+    base_url = "https://api.unsplash.com/"
+
+    def __init__(self, client_id: str, client):
+        """We use this initialization method to properly configure the ``httpx.Client`` object"""
+        self._client_id = client_id
+        self._headers = {"Authorization": f"Client-ID {client_id}"}
+        self._client: httpx.Client = client
+        self._client.headers = httpx.Headers(self._headers)
+
+    def search(self, query: str) -> ImageSearchResultSet:
         """
         Find images based on a ``search_term`` and return an ``ImageSearchResultSet``
         """
-        img_1 = ImageSearchResult("https://travishathaway.com/image_1.png", "png")
-        img_2 = ImageSearchResult("https://travishathaway.com/image_2.jpg", "jpeg")
+        search_url = urllib.parse.urljoin(self.base_url, "/search/photos")
+        resp = self._client.get(search_url, params={"query": query})
 
-        return ImageSearchResultSet((img_1, img_2), 2)
+        try:
+            resp.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise click.ClickException(str(exc))
 
-    def get(self, image_id: str) -> ImageSearchResult:
-        return ImageSearchResult("https://travishathaway.com", "png")
+        json_data = resp.json()
 
-    def download(self, image_id: str, path: Path) -> None:
+        search_results = tuple(
+            ImageSearchResult(
+                url=record.get("links", {}).get("download"),
+                width=record.get("width"),
+                height=record.get("height"),
+            )
+            for record in json_data.get("results", tuple())
+        )
+
+        return ImageSearchResultSet(search_results, json_data.get("total"))
+
+    def download(self, url: str, path: Path) -> None:
         print("Downloading...")
 
-    @classmethod
-    def create(cls, config) -> "UnsplashImageAPI":
-        """
-        Factory method used to create this object by using values from the configuration object.
-        """
-        return cls(config.unsplash_config.access_key)
+
+class UnsplashImageAPIContextManager(ImageAPIContextManager):
+    """
+    Context manager that returns the ``UnsplashImageAPI`` we wish to use.
+    This specific context manager handles setting up and tearing down the ``httpx.Client``
+    connection that we use in this plugin.
+    """
+
+    def __enter__(self) -> UnsplashImageAPI:
+        self.__client = httpx.Client()
+        return UnsplashImageAPI(self._config.unsplash_config.access_key, self.__client)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.__client.close()
 
 
 @hookimpl
-def image_search_api():
+def image_api():
     """
     Registers our Unsplash image API backend
     """
     return ImageAPIPlugin(
-        name=PLUGIN_NAME, backend=UnsplashImageAPI, config_fields=CONFIG_FIELDS
+        name=PLUGIN_NAME,
+        image_api_context_manager=UnsplashImageAPIContextManager,
+        config_fields=CONFIG_FIELDS,
     )

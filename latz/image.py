@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import abc
 from typing import Literal, NamedTuple
 from pathlib import Path
@@ -7,42 +9,50 @@ ImageTypes = Literal["png", "jpeg", "webp"]
 
 
 class ImageSearchResult(NamedTuple):
-    url: str
-    description: str
+    url: str | None
+    width: int | None
+    height: int | None
 
 
 class ImageSearchResultSet(NamedTuple):
     results: tuple[ImageSearchResult, ...]
-    number_results: int
+    total_number_results: int | None
+
+
+class ImageAPIContextManager(abc.ABC):
+    """
+    Used to help plugin authors create compliant context managers.
+
+    We use a class-based approach here to make sure that plugin authors appropriately
+    implement the type of context manager the application needs (i.e. one that returns
+    an implementation of ``ImageAPI``).
+    """
+
+    def __init__(self, config) -> None:
+        """Used to initialize and configure the ``ImageAPI`` object"""
+        self._config = config
+
+    @abc.abstractmethod
+    def __enter__(self) -> ImageAPI:
+        """This must return an implementation of the below ``ImageAPI`` class"""
+
+    @abc.abstractmethod
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Used to ensure the context manager protocol has been implemented"""
 
 
 class ImageAPI(abc.ABC):
     """
     Abstract base class for the Image API
     """
-
     @abc.abstractmethod
-    def search(self, search_term: str) -> ImageSearchResultSet:
+    def search(self, query: str) -> ImageSearchResultSet:
         """
         Used to search for an image via a search term and then return a single result set
         """
 
     @abc.abstractmethod
-    def get(self, image_id: str) -> ImageSearchResult:
-        """
-        Used to get metadata about an image given with a unique identifier.
-        """
-
-    @abc.abstractmethod
-    def download(self, image_id: str, path: Path) -> None:
+    def download(self, url: str, path: Path) -> None:
         """
         Used to download images to a local computer.
-        """
-
-    @classmethod
-    @abc.abstractmethod
-    def create(cls, config) -> "ImageAPI":
-        """
-        Use this as a factory function for creating new classes with values from the application
-        configuration.
         """
