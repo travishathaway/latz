@@ -59,9 +59,9 @@ class UnsplashImageAPI(ImageAPI):
         Find images based on a ``search_term`` and return an ``ImageSearchResultSet``
         """
         search_url = urllib.parse.urljoin(self.base_url, "/search/photos")
-        resp = self._client.get(search_url, params={"query": query})
 
         try:
+            resp = self._client.get(search_url, params={"query": query})
             resp.raise_for_status()
         except HTTPError as exc:
             raise click.ClickException(str(exc))
