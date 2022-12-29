@@ -15,15 +15,15 @@ from latz.cli import cli
 def runner_with_bad_backend(tmp_path, mocker):
     """Configures a test CLI runner using a bad backend"""
     runner = CliRunner()
-
-    mocker.patch("latz.cli.CONFIG_FILES", (tmp_path / CONFIG_FILE_NAME,))
+    config_file = tmp_path / CONFIG_FILE_NAME
+    mocker.patch("latz.cli.CONFIG_FILES", (config_file,))
 
     config = {
         "backend": "does_not_exist",
     }
 
     with runner.isolated_filesystem(tmp_path):
-        with open(tmp_path / CONFIG_FILE_NAME, "w") as fp:
+        with open(config_file, "w") as fp:
             json.dump(config, fp)
 
         yield runner
