@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.10", "3.11"]
 
     steps:
       - uses: actions/checkout@v3
@@ -25,6 +25,7 @@ jobs:
           conda update -n base -c defaults conda
           conda env update --file environment.yml --name base
           conda install --file requirements.dev.txt
+          echo $(python --version)
       - name: Install latz
         run: |
           pip install -e .
