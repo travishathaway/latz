@@ -712,7 +712,7 @@ test = ["appdirs (==1.4.4)", "pytest (>=7.2)", "pytest-cov (>=4)", "pytest-mock 
 name = "pluggy"
 version = "1.0.0"
 description = "plugin and hook calling mechanisms for python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 files = [
@@ -1113,4 +1113,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "397568fd3bca92d9d3fe919792e60223fe8f54978e00698fa58471d3cf7e4f0b"
+content-hash = "b5b5fe9c71660dd0261808538c811dab54b197fae4e4e408ae8ef1970a875a4d"
