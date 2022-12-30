@@ -1,5 +1,6 @@
 from collections import Counter
 from functools import reduce
+from collections.abc import Callable
 
 from click import ClickException
 from pluggy import PluginManager  # type: ignore
@@ -93,6 +94,20 @@ class AppPluginManager(PluginManager):
             )
 
         return image_api_context_manager
+
+    def get_backend_validator_func(self) -> Callable:
+        """Returns the validator function that is used by Pydantic when parsing configuration"""
+
+        def validate_backend(cls, value):
+            if value not in self.image_api_names:
+                valid_names = ", ".join(self.image_api_names)
+                raise ValueError(
+                    f"'{value}' is not valid choice for backend. "
+                    f"Available choices: {valid_names}"
+                )
+            return value
+
+        return validate_backend
 
 
 def get_plugin_manager() -> AppPluginManager:

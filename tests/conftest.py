@@ -21,11 +21,11 @@ def runner(mocker, tmp_path):
         },
     }
 
-    with runner.isolated_filesystem(tmp_path):
+    with runner.isolated_filesystem(temp_dir=tmp_path):
         with open(config_file, "w") as fp:
             json.dump(config, fp)
 
-        return runner
+        return runner, config_file
 
 
 @pytest.fixture

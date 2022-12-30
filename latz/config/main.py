@@ -82,6 +82,10 @@ def get_app_config(
         zip(*(parse_config_file_as_json(path) for path in existing_paths))
     )
 
+    json_data_and_path = tuple(
+        (data, path) for data, path in json_data_and_path if data
+    )
+
     if not json_data_and_path:
         return model_class()
 
@@ -91,7 +95,6 @@ def get_app_config(
             *(
                 parse_app_config_model(data, path, model_class)
                 for data, path in json_data_and_path
-                if data
             )
         )
     )

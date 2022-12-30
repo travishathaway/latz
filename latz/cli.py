@@ -23,16 +23,13 @@ def cli(ctx):
     ctx.ensure_object(Namespace)
     plugin_manager = get_plugin_manager()
 
-    def validate_backend(cls, value):
-        if value not in plugin_manager.image_api_names:
-            valid_names = ", ".join(plugin_manager.image_api_names)
-            raise ValueError(
-                f"'{value}' is not valid choice for backend. "
-                f"Available choices: {valid_names}"
-            )
-        return value
-
-    validators = {"backend_validator": validator("backend")(validate_backend)}
+    # We need to dynamically define our validators because we do not know all the of the
+    # valid backends until runtime.
+    validators = {
+        "backend_validator": validator("backend", allow_reuse=True)(
+            plugin_manager.get_backend_validator_func()
+        )
+    }
 
     # Dynamically create our new configuration object based on possible new fields
     # from our registered plugins.

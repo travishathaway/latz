@@ -14,8 +14,6 @@ from ..types import ImageAPIPlugin
 
 PLUGIN_NAME = "dummy"
 
-PlaceholderType = Literal["bear", "kitten"]
-
 
 class DummyBackendConfig(BaseModel):
     """
@@ -24,7 +22,7 @@ class DummyBackendConfig(BaseModel):
     tool can use it.
     """
 
-    placeholder_type: PlaceholderType = Field(
+    placeholder_type: Literal["bear", "kitten"] = Field(
         default="kitten", description="The type of placeholder image links to use"
     )
 
@@ -40,7 +38,7 @@ class DummyImageAPI(ImageAPI):
     hitting any search endpoints.
     """
 
-    def __init__(self, placeholder_type: PlaceholderType):
+    def __init__(self, placeholder_type: str):
         self._placeholder_type = placeholder_type.lower()
         self._base_url = f"https://place{self._placeholder_type}.com"
 

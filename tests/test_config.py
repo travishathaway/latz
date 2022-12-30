@@ -15,7 +15,8 @@ def test_bad_backend(runner_with_bad_backend: CliRunner):
     result = runner_with_bad_backend.invoke(cli, ["search", "search_term"])
 
     assert result.exit_code == 1
-    assert "Backend has been improperly configured" in result.stdout
+    assert "backend:" in result.stdout
+    assert "'does_not_exist' is not valid choice for backend" in result.stdout
 
 
 def test_non_existent_config_file(
