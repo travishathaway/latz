@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import json
-
 import rich_click as click
 from rich import print as rprint
 
 from ...constants import CONFIG_FILE_CWD, CONFIG_FILE_HOME_DIR
+from ...config.main import parse_config_file_as_json, write_config_file
 from .validators import validate_and_parse_config_values
 
 
@@ -34,29 +33,19 @@ def set_command(home, config_values):
     Set configuration values.
     """
     config_file = CONFIG_FILE_HOME_DIR if home else CONFIG_FILE_CWD
-    bad_json = False
 
-    with config_file.open("r") as fp:
-        try:
-            config_file_data = json.load(fp)
-        except json.JSONDecodeError:
-            # TODO: this needs to be refactored so we aren't repeating this twice.
-            raise click.ClickException(
-                f"Config file: {config_file} has been corrupted (i.e. not in the correct format) "
-                "and cannot be edited."
-            )
+    parsed_config = parse_config_file_as_json(config_file)
 
-    if not isinstance(config_file_data, dict) or bad_json:
-        raise click.ClickException(
-            f"Config file: {config_file} has been corrupted (i.e. not in the correct format) "
-            "and cannot be edited."
-        )
+    if parsed_config.error is not None:
+        raise click.ClickException(parsed_config.error)
 
     # Merge the new values and old values; new overwrites the old
-    new_config_file_data = {**config_file_data, **config_values}
+    new_config_file_data = {**parsed_config.data, **config_values}
 
-    with config_file.open("w") as fp:
-        json.dump(new_config_file_data, fp, indent=2)
+    error = write_config_file(new_config_file_data, config_file)
+
+    if error:
+        raise click.ClickException(error)
 
 
 group.add_command(show_command)

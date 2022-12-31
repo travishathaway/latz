@@ -5,14 +5,29 @@ import logging
 from collections.abc import Sequence, Iterable
 from pathlib import Path
 from functools import reduce
+from typing import NamedTuple, Any
 
-from pydantic import ValidationError, BaseModel
+from pydantic import ValidationError
 from click import ClickException
 
 from .models import BaseAppConfig
 from .errors import format_validation_error, format_all_validation_errors
 
 logger = logging.getLogger(__name__)
+
+
+class ParsedConfigFile(NamedTuple):
+    #: Path to the configuration file
+    path: Path
+
+    #: Data contained within the configuration file
+    data: dict | None
+
+    #: Parse errors encountered while parsing the configuration file
+    error: str | None
+
+    #: Parse errors encountered while parsing the configuration file
+    model: BaseAppConfig | None
 
 
 def merge_app_configs(
@@ -32,35 +47,73 @@ def merge_app_configs(
 
 def parse_config_file_as_json(
     path: Path,
-) -> tuple[tuple[dict | None, Path], str | None]:
+) -> ParsedConfigFile:
     """
     Given a path, try to parse it as JSON and ensure it is a dictionary
     and then return it. If it fails, we log a warning and return ``None``
     """
     try:
-        config_data_json = json.load(path.open())
+        with path.open() as fp:
+            config_data_json = json.load(fp)
     except json.JSONDecodeError as exc:
-        return (None, path), f"Unable to parse {path}: {exc}"
+        return ParsedConfigFile(
+            data=None, path=path, error=f"Unable to parse {path}: {exc}", model=None
+        )
 
     if not isinstance(config_data_json, dict):
-        return (None, path), f"Unable to parse {path}: JSON not correctly formatted"
+        return ParsedConfigFile(
+            data=None,
+            path=path,
+            error=f"Unable to parse {path}: JSON not correctly formatted",
+            model=None,
+        )
 
-    return (config_data_json, path), None
+    return ParsedConfigFile(data=config_data_json, path=path, error=None, model=None)
 
 
 def parse_app_config_model(
-    data: dict, path: Path, model_class: type[BaseModel]
-) -> tuple[BaseModel | None, str | None]:
+    parsed_config: ParsedConfigFile, model_class: type[BaseAppConfig]
+) -> ParsedConfigFile:
     """
     Attempts to parse a dictionary as a ``AppConfig`` object. If successful,
     returns the ``AppConfig`` object and ``None`` as the error value. If not,
     returns ``None`` as the config and ``str`` as an error value.
     """
     try:
-        config_model = model_class(**data)
-        return config_model, None
+        if parsed_config.data:
+            config_model = model_class(**parsed_config.data)
+            return ParsedConfigFile(
+                model=config_model, error=None, path=parsed_config.path, data=None
+            )
+        else:
+            return ParsedConfigFile(
+                model=None,
+                path=parsed_config.path,
+                error=parsed_config.error,
+                data=None,
+            )
     except ValidationError as exc:
-        return None, format_validation_error(exc, path)
+        return ParsedConfigFile(
+            model=None,
+            error=format_validation_error(exc, parsed_config.path),
+            data=parsed_config.data,
+            path=parsed_config.path,
+        )
+
+
+def parse_config_files(paths: Sequence[Path]) -> tuple[ParsedConfigFile, ...] | None:
+    """
+    Given a list a ``paths`` to configuration files, returns those which
+    can successfully be parsed. These are returned as ``ParsedConfigFile`` objects
+    which contain the attributes "path", "data", and "error".
+    """
+    existing_paths = tuple(path for path in paths if path.is_file())
+
+    if not existing_paths:
+        return  # type: ignore
+
+    # Parse JSON objects
+    return tuple(parse_config_file_as_json(path) for path in existing_paths)
 
 
 def get_app_config(
@@ -72,39 +125,25 @@ def get_app_config(
 
     :raises ClickException: Happens when any errors are encountered during config parsing
     """
-    existing_paths = tuple(path for path in paths if path.is_file())
+    parsed_config_files = parse_config_files(paths)
 
-    if not existing_paths:
+    # No files were found 🤷‍
+    if parsed_config_files is None:
         return model_class()
 
-    # Parse JSON objects
-    json_data_and_path, parse_errors = tuple(
-        zip(*(parse_config_file_as_json(path) for path in existing_paths))
-    )
-
-    json_data_and_path = tuple(
-        (data, path) for data, path in json_data_and_path if data
-    )
-
-    if not json_data_and_path:
-        return model_class()
-
-    # Parse AppConfig objects
-    app_configs, config_parse_errors = tuple(
-        zip(
-            *(
-                parse_app_config_model(data, path, model_class)
-                for data, path in json_data_and_path
-            )
-        )
+    parsed_config_files = tuple(
+        parse_app_config_model(parsed, model_class) for parsed in parsed_config_files
     )
 
     # Gather errors
-    errors: tuple[str, ...] = tuple(filter(None, parse_errors + config_parse_errors))
+    errors = tuple(parsed.error for parsed in parsed_config_files if parsed.error)
 
     # Fail loudly if any errors
     if len(errors) > 0:
         raise ClickException(format_all_validation_errors(errors))
+
+    # Gather configs
+    app_configs = tuple(parsed.model for parsed in parsed_config_files if parsed.model)
 
     # If there are no app_configs and no errors, provide a default
     if not app_configs:
@@ -112,3 +151,16 @@ def get_app_config(
 
     # Merge all successfully parsed app_configs
     return merge_app_configs(app_configs, model_class)
+
+
+def write_config_file(
+    config_file_data: dict[str, Any], config_file: Path
+) -> str | None:
+    """
+    Attempts to write a
+    """
+    try:
+        with config_file.open("w") as fp:
+            json.dump(config_file_data, fp, indent=2)
+    except OSError as exc:
+        return str(exc)
