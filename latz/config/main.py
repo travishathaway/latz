@@ -8,12 +8,15 @@ from functools import reduce
 from typing import NamedTuple, Any
 
 from pydantic import ValidationError
-from click import ClickException
 
 from .models import BaseAppConfig
 from .errors import format_validation_error, format_all_validation_errors
 
 logger = logging.getLogger(__name__)
+
+
+class ConfigError(Exception):
+    pass
 
 
 class ParsedConfigFile(NamedTuple):
@@ -123,11 +126,11 @@ def get_app_config(
     Given a sequence of ``paths`` first attempts to parse these as JSON and then
     attempts to parse valid JSON objects as ``AppConfig`` objects.
 
-    :raises ClickException: Happens when any errors are encountered during config parsing
+    :raises ConfigError: Happens when any errors are encountered during config parsing
     """
     parsed_config_files = parse_config_files(paths)
 
-    # No files were found 🤷‍
+    # No files were found 🤷‍; let's return a default config object
     if parsed_config_files is None:
         return model_class()
 
@@ -140,7 +143,7 @@ def get_app_config(
 
     # Fail loudly if any errors
     if len(errors) > 0:
-        raise ClickException(format_all_validation_errors(errors))
+        raise ConfigError(format_all_validation_errors(errors))
 
     # Gather configs
     app_configs = tuple(parsed.model for parsed in parsed_config_files if parsed.model)
@@ -153,14 +156,14 @@ def get_app_config(
     return merge_app_configs(app_configs, model_class)
 
 
-def write_config_file(
-    config_file_data: dict[str, Any], config_file: Path
-) -> str | None:
+def write_config_file(config_file_data: dict[str, Any], config_file: Path) -> None:
     """
-    Attempts to write a
+    Attempts to write config file and returns the exception as a string if it failed.
+
+    :raises ConfigError: Raised when we are not able to write our config file.
     """
     try:
         with config_file.open("w") as fp:
             json.dump(config_file_data, fp, indent=2)
     except OSError as exc:
-        return str(exc)
+        raise ConfigError(str(exc))

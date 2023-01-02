@@ -4,7 +4,7 @@ import rich_click as click
 from rich import print as rprint
 
 from ...constants import CONFIG_FILE_CWD, CONFIG_FILE_HOME_DIR
-from ...config.main import parse_config_file_as_json, write_config_file
+from ...config import parse_config_file_as_json, write_config_file, ConfigError
 from .validators import validate_and_parse_config_values
 
 
@@ -42,10 +42,10 @@ def set_command(home, config_values):
     # Merge the new values and old values; new overwrites the old
     new_config_file_data = {**parsed_config.data, **config_values}
 
-    error = write_config_file(new_config_file_data, config_file)
-
-    if error:
-        raise click.ClickException(error)
+    try:
+        write_config_file(new_config_file_data, config_file)
+    except ConfigError as exc:
+        raise click.ClickException(str(exc))
 
 
 group.add_command(show_command)

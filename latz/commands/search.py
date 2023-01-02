@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import cast, ContextManager, Any
 
 import click
+import httpx
 from rich import print as rprint
 
 from ..image import ImageAPI
@@ -19,7 +20,10 @@ def command(ctx, query: str):
     )
 
     with image_api_context_manager(ctx.obj.config) as api:
-        result_set = api.search(query)
+        try:
+            result_set = api.search(query)
+        except httpx.HTTPError as exc:
+            raise click.ClickException(str(exc))
 
         for res in result_set.results:
             rprint(res)

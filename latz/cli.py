@@ -5,7 +5,7 @@ import rich_click as click
 from pydantic import create_model, validator
 
 from .commands import search_command, config_group
-from .config import get_app_config, BaseAppConfig
+from .config import get_app_config, BaseAppConfig, ConfigError
 from .constants import CONFIG_FILES
 from .plugins.manager import get_plugin_manager
 
@@ -45,7 +45,10 @@ def cli(ctx):
 
     # Creates the actual config object which parses all possible configuration sources
     # listed in ``CONFIG_FILES``.
-    app_config = get_app_config(CONFIG_FILES, AppConfig)
+    try:
+        app_config = get_app_config(CONFIG_FILES, AppConfig)
+    except ConfigError as exc:
+        raise click.ClickException(str(exc))
 
     # Attach several properties to click's ``ctx`` object so that we have access to it
     # in our sub-commands.

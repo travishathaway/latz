@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import urllib.parse
 
-import click
-from httpx import Client, HTTPError, Headers
+from httpx import Client, Headers
 from pydantic import BaseModel, Field
 
 from ...image import (
@@ -47,24 +46,26 @@ class UnsplashImageAPI(ImageAPI):
     #: Base URL for the Unsplash API
     base_url = "https://api.unsplash.com/"
 
-    def __init__(self, client_id: str, client):
+    #: Endpoint used for searching images
+    search_endpoint = "/search/photos"
+
+    def __init__(self, client_id: str, client: Client):
         """We use this initialization method to properly configure the ``httpx.Client`` object"""
         self._client_id = client_id
         self._headers = {"Authorization": f"Client-ID {client_id}"}
-        self._client: Client = client
+        self._client = client
         self._client.headers = Headers(self._headers)
 
     def search(self, query: str) -> ImageSearchResultSet:
         """
         Find images based on a ``search_term`` and return an ``ImageSearchResultSet``
-        """
-        search_url = urllib.parse.urljoin(self.base_url, "/search/photos")
 
-        try:
-            resp = self._client.get(search_url, params={"query": query})
-            resp.raise_for_status()
-        except HTTPError as exc:
-            raise click.ClickException(str(exc))
+        :raises HTTPError: Encountered during problems querying the API
+        """
+        search_url = urllib.parse.urljoin(self.base_url, self.search_endpoint)
+
+        resp = self._client.get(search_url, params={"query": query})
+        resp.raise_for_status()
 
         json_data = resp.json()
 
