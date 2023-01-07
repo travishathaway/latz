@@ -128,4 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# JetBrains stuff
 .idea
+
+# Application config file
+.latz.json
