@@ -12,27 +12,25 @@ from ...image import (
 from ..hookspec import hookimpl
 from ..types import ImageAPIPlugin
 
-PLUGIN_NAME = "dummy"
+PLUGIN_NAME = "placeholder"
 
 
-class DummyBackendConfig(BaseModel):
+class PlaceholderBackendConfig(BaseModel):
     """
     Unsplash requires the usage of an ``access_key`` and ``secret_key``
     when using their API. We expose these settings here so users of the CLI
     tool can use it.
     """
 
-    placeholder_type: Literal["bear", "kitten"] = Field(
+    type: Literal["bear", "kitten"] = Field(
         default="kitten", description="The type of placeholder image links to use"
     )
 
 
-CONFIG_FIELDS = {
-    f"{PLUGIN_NAME}_config": (DummyBackendConfig, {"placeholder_type": "kitten"})
-}
+CONFIG_FIELDS = {f"{PLUGIN_NAME}": (PlaceholderBackendConfig, {"type": "kitten"})}
 
 
-class DummyImageAPI(ImageAPI):
+class PlaceholderImageAPI(ImageAPI):
     """
     Used primarily to test and when we want to run the program without
     hitting any search endpoints.
@@ -57,13 +55,13 @@ class DummyImageAPI(ImageAPI):
         return ImageSearchResultSet(results=results, total_number_results=len(results))
 
 
-class DummyImageAPIContextManager(ImageAPIContextManager):
+class PlaceholderImageAPIContextManager(ImageAPIContextManager):
     """
-    Dummy context manager for our DummyImageAPI
+    Context manager for our PlaceholderImageAPI
     """
 
-    def __enter__(self) -> DummyImageAPI:
-        return DummyImageAPI(self._config.dummy_config.placeholder_type)
+    def __enter__(self) -> PlaceholderImageAPI:
+        return PlaceholderImageAPI(self._config.placeholder.type)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
@@ -76,6 +74,6 @@ def image_api():
     """
     return ImageAPIPlugin(
         name=PLUGIN_NAME,
-        image_api_context_manager=DummyImageAPIContextManager,
+        image_api_context_manager=PlaceholderImageAPIContextManager,
         config_fields=CONFIG_FIELDS,
     )

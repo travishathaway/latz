@@ -14,10 +14,5 @@ class BaseAppConfig(BaseSettings):
         description="Image search backend to use for retrieving images.",
     )
 
-    results_per_page: int = Field(
-        default=10,
-        description="Default number of images to display per page when searching.",
-    )
-
     class Config:
         env_prefix = ENV_PREFIX

@@ -28,7 +28,7 @@ def validate_and_parse_config_values(ctx, _, values) -> dict[str, str]:
             )
         parameter, value = match.groups()
         current_value = get_dotted_path_value(current_config, parameter)
-        if not current_value:
+        if current_value is None:
             raise click.BadParameter(
                 f"'{parameter}' is not a valid configuration parameter"
             )

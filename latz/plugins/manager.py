@@ -9,7 +9,7 @@ from ..constants import APP_NAME
 from ..config.models import BaseAppConfig
 from ..image import ImageAPI
 from .hookspec import AppHookSpecs
-from .image import unsplash, dummy
+from .image import unsplash, placeholder
 
 
 class AppPluginManager(PluginManager):
@@ -124,7 +124,7 @@ def get_plugin_manager() -> AppPluginManager:
 
     # Registers internal plugin hooks
     plugin_manager.register(unsplash)
-    plugin_manager.register(dummy)
+    plugin_manager.register(placeholder)
 
     # This is the magic that allows our application to discover other plugins
     # installed alongside it
