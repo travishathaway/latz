@@ -20,4 +20,5 @@ jobs:
           conda update -n base -c defaults conda
           conda env update --file environment.yml --name base
           conda install --file requirements.dev.txt
+          pip install -e .
       - run: mkdocs gh-deploy --force --clean --verbose

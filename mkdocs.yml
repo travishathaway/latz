@@ -1,7 +1,11 @@
 site_name: latz
+repo_url: https://github.com/travishathaway/latz
+repo_name: travishathaway/latz
 
 theme:
   name: material
+  palette:
+    primary: blue-grey
 
 markdown_extensions:
   - mkdocs-click

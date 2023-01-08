@@ -1,10 +1,12 @@
-# latz
+# Overview
 
 [pluggy]: https://pluggy.readthedocs.io/en/stable/
 [click]: https://click.palletsprojects.com/
 [pydantic]: https://docs.pydantic.dev/
 [rich]: https://rich.readthedocs.io/
 [anaconda.org]: https://anaconda.org
+[latz-imgur]: https://github.com/travishathaway/latz-imgur
+[creating-plugins]: creating-plugins
 
 This is a command line tool used for retrieving images from various image
 search backends (e.g. Unsplash, Google). This tool is primarily developed for educational purposes
@@ -22,8 +24,7 @@ Other libraries used include the following:
 ### Why "latz"
 
 "latz" is short and easy to type! This is super important when writing CLI programs.
-I also thought about adding a geolocation search feature, so it is a reference
-to the word "latitude".
+I also might add a geolocation search feature, so it is a reference  to the word "latitude".
 
 ## Quick Start
 
@@ -62,8 +63,10 @@ config file. An example is show below:
 ```json
 {
   "backend": "unsplash",
-  "unsplash_config": {
-    "access_key": "your-access-key"
+  "backend_settings": {
+    "unsplash": {
+      "access_key": "your-access-key"
+    }
   }
 }
 ```
@@ -74,12 +77,21 @@ To see other available image search backends, see [Available image search backen
 
 ### Usage
 
-_coming soon_ 😉
+
 
 ### Available image search backends
 
-_coming soon_ 😉
+Here are a list of the available search backends:
 
-### How to extend and write your own image search backen
+#### Built-in
 
-_coming soon_ 😉
+- "unsplash"
+- "placeholder"
+
+#### Third-party
+
+- [latz-imgur][latz-imgur]
+
+### How to extend and write your own image search backend
+
+Please see the [creating plugins][creating-plugins] guide in the documentation.
