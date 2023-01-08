@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 from click import ClickException
 from pluggy import PluginManager  # type: ignore
+from pydantic import create_model
 
 from ..constants import APP_NAME
 from ..config.models import BaseAppConfig
@@ -65,13 +66,17 @@ class AppPluginManager(PluginManager):
 
         TODO: add a duplicate check just like for API names
         """
-        return reduce(
+        image_api_config = reduce(
             lambda dict_one, dict_two: {**dict_one, **dict_two},
             (
                 image_search_api.config_fields
                 for image_search_api in self.hook.image_api()
             ),
         )
+
+        BackendSettings = create_model("BackendSettings", **image_api_config)
+
+        return {"backend_settings": (BackendSettings, BackendSettings().dict())}
 
     def get_image_api_context_manager(self, app_config: BaseAppConfig) -> ImageAPI:
         """

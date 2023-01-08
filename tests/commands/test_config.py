@@ -20,14 +20,14 @@ def test_show_config(runner: tuple[CliRunner, Path]):
     assert (
         result.stdout
         == """{
-  "backend": "dummy",
-  "results_per_page": 10,
-  "dummy_config": {
-    "placeholder_type": "kitten"
-  },
-  "unsplash_config": {
-    "access_key": "",
-    "secret_key": ""
+  "backend": "placeholder",
+  "backend_settings": {
+    "placeholder": {
+      "type": "kitten"
+    },
+    "unsplash": {
+      "access_key": ""
+    }
   }
 }
 """
@@ -37,8 +37,6 @@ def test_show_config(runner: tuple[CliRunner, Path]):
 def test_set_config_backend(runner: tuple[CliRunner, Path], mocker):
     """
     Makes sure that we can  update the backend via the "config set" subcommand
-
-    TODO: make this test pass!
     """
     cmd_runner, config_file = runner
     mocker.patch("latz.commands.config.commands.CONFIG_FILE_CWD", config_file)
@@ -54,13 +52,13 @@ def test_set_config_backend(runner: tuple[CliRunner, Path], mocker):
         result.stdout
         == """{
   "backend": "unsplash",
-  "results_per_page": 10,
-  "dummy_config": {
-    "placeholder_type": "kitten"
-  },
-  "unsplash_config": {
-    "access_key": "",
-    "secret_key": ""
+  "backend_settings": {
+    "placeholder": {
+      "type": "kitten"
+    },
+    "unsplash": {
+      "access_key": ""
+    }
   }
 }
 """
@@ -87,7 +85,7 @@ def test_set_config_backend_with_bad_config_file(
 
     TODO: This test has a pretty naive approach to its assertions. It would be better
           to have assertions here that don't just rely on the exit code so we can
-          tell what error was actually raise.
+          tell what error was actually raised.
 
     TODO: Break this into two tests
     """
@@ -97,13 +95,13 @@ def test_set_config_backend_with_bad_config_file(
     with config_file.open("w") as fp:
         fp.write("bad val")
 
-    result = cmd_runner.invoke(cli, [COMMAND, "set", "backend=dummy"])
+    result = cmd_runner.invoke(cli, [COMMAND, "set", "backend=placeholder"])
 
     assert result.exit_code == 1
 
     with config_file.open("w") as fp:
         fp.write("[]")
 
-    result = cmd_runner.invoke(cli, [COMMAND, "set", "backend=dummy"])
+    result = cmd_runner.invoke(cli, [COMMAND, "set", "backend=placeholder"])
 
     assert result.exit_code == 1

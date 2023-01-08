@@ -5,7 +5,10 @@ from rich import print as rprint
 
 from ...constants import CONFIG_FILE_CWD, CONFIG_FILE_HOME_DIR
 from ...config import parse_config_file_as_json, write_config_file, ConfigError
-from .validators import validate_and_parse_config_values
+from .validators import ConfigValuesValidator
+
+# Create our validator callables
+validate_and_parse_config_values = ConfigValuesValidator()
 
 
 @click.group("config")

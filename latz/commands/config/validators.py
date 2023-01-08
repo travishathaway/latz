@@ -7,39 +7,60 @@ import click
 from pydantic import ValidationError
 
 
-def validate_and_parse_config_values(ctx, _, values) -> dict[str, str]:
+class ConfigValuesValidator:
     """
-    Validation function that parses and validates incoming configure parameter that
-    look like this:
-        param=value
-        nested.param=value
+    Validation class that is meant to be called as a validator callable
+    within click. It will parse and validate incoming values that look like
+    this:
+
+        param=value -> {"param": "value"}
+        nested.param=value -> {"nested": {"param": "value"}}
     """
-    pattern = re.compile(r"([a-z,A-Z,\.,_]+)=(.*)")
 
-    current_config = ctx.obj.config.dict()
-    checked_values = {}
+    def __init__(self):
+        self._pattern = re.compile(r"([a-zA-Z._]+)=(.*)")
 
-    for value in values:
-        match = pattern.match(value)
+    def __call__(self, ctx, _, values) -> dict[str, str]:
+        current_config = ctx.obj.config.dict()
+        checked_values = {}
+
+        for value in values:
+            checked_values.update(self.validate_single_value(value))
+
+        try:
+            ctx.obj.config_class(**{**current_config, **checked_values})
+        except ValidationError as exc:
+            raise click.ClickException(f"\n{str(exc)}")
+
+        return checked_values
+
+    def validate_single_value(self, value: str) -> dict:
+        """
+        Validates a single config parameter. This is done by first matching the
+        string value against a regex. Afterwards we return this value in its dictionary
+        representation (e.g. "param=value -> {"param": "value"}).
+
+        :raises click.BadParameter: raises to halt program when bad input is received
+        """
+        match = self._pattern.match(value)
+
         if not match:
-            raise click.BadParameter(
-                f"'{value}' does not conform to the correct format. Please use the 'param=value'"
-                " format."
-            )
+            raise click.BadParameter(self._format_bad_format_error(value))
+
         parameter, value = match.groups()
-        current_value = get_dotted_path_value(current_config, parameter)
-        if current_value is None:
-            raise click.BadParameter(
-                f"'{parameter}' is not a valid configuration parameter"
-            )
-        checked_values.update(get_nested_dict_from_path(parameter, value))
 
-    try:
-        ctx.obj.config_class(**{**current_config, **checked_values})
-    except ValidationError as exc:
-        raise click.ClickException(f"\n{str(exc)}")
+        return get_nested_dict_from_path(parameter, value)
 
-    return checked_values
+    @staticmethod
+    def _format_bad_format_error(value):
+        return (
+            f"'{value}' does not conform to the correct format. Please use the 'param=value'"
+            " format."
+        )
+
+    @staticmethod
+    def _format_invalid_parameter_error(parameter):
+        return f"'{parameter}' is not a valid configuration parameter"
 
 
 def get_dotted_path_value(nest: dict, dotted_path: str) -> Any:

@@ -28,12 +28,7 @@ class UnsplashBackendConfig(BaseModel):
     access_key: str = Field(description="Access key for the Unsplash API")
 
 
-CONFIG_FIELDS = {
-    f"{PLUGIN_NAME}": (
-        UnsplashBackendConfig,
-        {"access_key": "", "secret_key": ""},
-    )
-}
+CONFIG_FIELDS = {f"{PLUGIN_NAME}": (UnsplashBackendConfig, {"access_key": ""})}
 
 
 class UnsplashImageAPI(ImageAPI):
@@ -88,7 +83,9 @@ class UnsplashImageAPIContextManager(ImageAPIContextManager):
 
     def __enter__(self) -> UnsplashImageAPI:
         self.__client = Client()
-        return UnsplashImageAPI(self._config.unsplash.access_key, self.__client)
+        return UnsplashImageAPI(
+            self._config.backend_settings.unsplash.access_key, self.__client
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__client.close()

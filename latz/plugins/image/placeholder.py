@@ -61,7 +61,7 @@ class PlaceholderImageAPIContextManager(ImageAPIContextManager):
     """
 
     def __enter__(self) -> PlaceholderImageAPI:
-        return PlaceholderImageAPI(self._config.placeholder.type)
+        return PlaceholderImageAPI(self._config.backend_settings.placeholder.type)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass

@@ -15,9 +15,11 @@ def runner(mocker, tmp_path):
     mocker.patch("latz.cli.CONFIG_FILES", (config_file,))
 
     config = {
-        "backend": "dummy",
-        "dummy_config": {
-            "placeholder_type": "kitten",
+        "backend": "placeholder",
+        "backend_settings": {
+            "placeholder": {
+                "type": "kitten",
+            }
         },
     }
 
@@ -96,7 +98,7 @@ def runner_with_multiple_config_files(tmp_path, mocker):
     }
 
     config_two_data = {
-        "backend": "dummy",
+        "backend": "placeholder",
     }
 
     with runner.isolated_filesystem(tmp_path):
