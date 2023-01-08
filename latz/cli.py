@@ -13,12 +13,16 @@ click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.USE_MARKDOWN_EMOJI = True
 
 
-@click.group()
+@click.group("latz")
 @click.pass_context
 def cli(ctx):
     """
-    Creates a click command group but also does the job of properly initializing
-    our command line application.
+    "latz" is a command line tool for searching images via various image API backends.
+    It is largely meant for educational purposes to show how to develop plugin friendly
+    Python applications.
+
+    The included commands are "search" for performing actual image searches and "config"
+    for setting and displaying configuration variables.
     """
     ctx.ensure_object(Namespace)
     plugin_manager = get_plugin_manager()

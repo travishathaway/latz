@@ -1,0 +1,7 @@
+site_name: latz
+
+theme:
+  name: material
+
+markdown_extensions:
+  - mkdocs-click

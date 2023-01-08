@@ -7,3 +7,6 @@ conda-forge::pytest-cov
 conda-forge::pytest-mock
 conda-forge::ipython
 conda-forge::pre-commit
+conda-forge::mkdocs
+conda-forge::mkdocs-material
+conda-forge::mkdocs-click
