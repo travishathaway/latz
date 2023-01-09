@@ -9,3 +9,6 @@ theme:
 
 markdown_extensions:
   - mkdocs-click
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
