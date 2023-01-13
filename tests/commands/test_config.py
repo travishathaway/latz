@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from click.testing import CliRunner
@@ -17,21 +18,19 @@ def test_show_config(runner: tuple[CliRunner, Path]):
 
     assert result.exit_code == 0
 
-    assert (
-        result.stdout
-        == """{
-  "backend": "placeholder",
-  "backend_settings": {
-    "placeholder": {
-      "type": "kitten"
-    },
-    "unsplash": {
-      "access_key": ""
-    }
-  }
-}
-"""
-    )
+    json_data = json.loads(result.stdout)
+
+    assert json_data.get("backend") == "placeholder"
+
+    placeholder = json_data.get("backend_settings", {}).get("placeholder")
+
+    assert placeholder
+    assert placeholder.get("type") == "kitten"
+
+    unsplash = json_data.get("backend_settings", {}).get("unsplash")
+
+    assert unsplash
+    assert unsplash.get("access_key") == ""
 
 
 def test_set_config_backend(runner: tuple[CliRunner, Path], mocker):
@@ -48,21 +47,20 @@ def test_set_config_backend(runner: tuple[CliRunner, Path], mocker):
     result = cmd_runner.invoke(cli, [COMMAND, "show"])
 
     assert result.exit_code == 0
-    assert (
-        result.stdout
-        == """{
-  "backend": "unsplash",
-  "backend_settings": {
-    "placeholder": {
-      "type": "kitten"
-    },
-    "unsplash": {
-      "access_key": ""
-    }
-  }
-}
-"""
-    )
+
+    json_data = json.loads(result.stdout)
+
+    assert json_data.get("backend") == "unsplash"
+
+    placeholder = json_data.get("backend_settings", {}).get("placeholder")
+
+    assert placeholder
+    assert placeholder.get("type") == "kitten"
+
+    unsplash = json_data.get("backend_settings", {}).get("unsplash")
+
+    assert unsplash
+    assert unsplash.get("access_key") == ""
 
 
 def test_set_bad_config_backend(runner: tuple[CliRunner, Path], mocker):

@@ -10,3 +10,5 @@ conda-forge::pre-commit
 conda-forge::mkdocs
 conda-forge::mkdocs-material
 conda-forge::mkdocs-click
+conda-forge::mkdocstrings
+conda-forge::mkdocstrings-python

@@ -1,20 +1,19 @@
 from __future__ import annotations
 
 import urllib.parse
+from contextlib import contextmanager
+from collections.abc import Iterator
 
 from httpx import Client, Headers
 from pydantic import BaseModel, Field
 
 from ...image import (
-    ImageAPI,
     ImageSearchResult,
     ImageSearchResultSet,
-    ImageAPIContextManager,
 )
-from ..hookspec import hookimpl
-from ..types import ImageAPIPlugin
+from .. import hookimpl, ImageAPIPlugin
 
-
+#: Name of the plugin that will be referenced in our configuration
 PLUGIN_NAME = "unsplash"
 
 
@@ -28,26 +27,24 @@ class UnsplashBackendConfig(BaseModel):
     access_key: str = Field(description="Access key for the Unsplash API")
 
 
-CONFIG_FIELDS = {f"{PLUGIN_NAME}": (UnsplashBackendConfig, {"access_key": ""})}
+#: These are the configuration settings we export when registering our plugin
+CONFIG_FIELDS = {PLUGIN_NAME: (UnsplashBackendConfig, {"access_key": ""})}
+
+#: Base URL for the Unsplash API
+BASE_URL = "https://api.unsplash.com/"
+
+#: Endpoint used for searching images
+SEARCH_ENDPOINT = "/search/photos"
 
 
-class UnsplashImageAPI(ImageAPI):
+class UnsplashImageAPI:
     """
     Implementation of ImageAPI for use with the Unsplash API: https://unsplash.com/documentation
     """
 
-    #: Base URL for the Unsplash API
-    base_url = "https://api.unsplash.com/"
-
-    #: Endpoint used for searching images
-    search_endpoint = "/search/photos"
-
-    def __init__(self, client_id: str, client: Client):
-        """We use this initialization method to properly configure the ``httpx.Client`` object"""
-        self._client_id = client_id
-        self._headers = {"Authorization": f"Client-ID {client_id}"}
+    def __init__(self, client: Client):
+        """Attach an `httpx.Client` object to our API"""
         self._client = client
-        self._client.headers = Headers(self._headers)
 
     def search(self, query: str) -> ImageSearchResultSet:
         """
@@ -55,7 +52,7 @@ class UnsplashImageAPI(ImageAPI):
 
         :raises HTTPError: Encountered during problems querying the API
         """
-        search_url = urllib.parse.urljoin(self.base_url, self.search_endpoint)
+        search_url = urllib.parse.urljoin(BASE_URL, SEARCH_ENDPOINT)
 
         resp = self._client.get(search_url, params={"query": query})
         resp.raise_for_status()
@@ -74,21 +71,22 @@ class UnsplashImageAPI(ImageAPI):
         return ImageSearchResultSet(search_results, json_data.get("total"))
 
 
-class UnsplashImageAPIContextManager(ImageAPIContextManager):
+@contextmanager
+def unsplash_context_manager(config) -> Iterator[UnsplashImageAPI]:
     """
     Context manager that returns the ``UnsplashImageAPI`` we wish to use.
     This specific context manager handles setting up and tearing down the ``httpx.Client``
     connection that we use in this plugin.
     """
+    client = Client()
+    client.headers = Headers(
+        {"Authorization": f"Client-ID {config.backend_settings.unsplash.access_key}"}
+    )
 
-    def __enter__(self) -> UnsplashImageAPI:
-        self.__client = Client()
-        return UnsplashImageAPI(
-            self._config.backend_settings.unsplash.access_key, self.__client
-        )
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.__client.close()
+    try:
+        yield UnsplashImageAPI(client)
+    finally:
+        client.close()
 
 
 @hookimpl
@@ -98,6 +96,6 @@ def image_api():
     """
     return ImageAPIPlugin(
         name=PLUGIN_NAME,
-        image_api_context_manager=UnsplashImageAPIContextManager,
+        image_api_context_manager=unsplash_context_manager,
         config_fields=CONFIG_FIELDS,
     )

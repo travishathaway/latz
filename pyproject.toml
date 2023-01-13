@@ -28,6 +28,7 @@ pytest-mock = "^3.10.0"
 mkdocs = "^1.4.2"
 mkdocs-material = "^9.0.3"
 mkdocs-click = "^0.8.0"
+mkdocstrings = {extras = ["python"], version = "^0.19.1"}
 
 [tool.poetry.scripts]
 latz = 'latz.cli:cli'

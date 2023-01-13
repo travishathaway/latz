@@ -1,17 +1,16 @@
+from contextlib import contextmanager
 from typing import Literal
 from urllib.parse import urljoin
 
 from pydantic import BaseModel, Field
 
 from ...image import (
-    ImageAPI,
-    ImageAPIContextManager,
     ImageSearchResult,
     ImageSearchResultSet,
 )
-from ..hookspec import hookimpl
-from ..types import ImageAPIPlugin
+from .. import hookimpl, ImageAPIPlugin
 
+#: Name of the plugin that will be referenced in our configuration
 PLUGIN_NAME = "placeholder"
 
 
@@ -27,10 +26,10 @@ class PlaceholderBackendConfig(BaseModel):
     )
 
 
-CONFIG_FIELDS = {f"{PLUGIN_NAME}": (PlaceholderBackendConfig, {"type": "kitten"})}
+CONFIG_FIELDS = {PLUGIN_NAME: (PlaceholderBackendConfig, {"type": "kitten"})}
 
 
-class PlaceholderImageAPI(ImageAPI):
+class PlaceholderImageAPI:
     """
     Used primarily to test and when we want to run the program without
     hitting any search endpoints.
@@ -55,16 +54,13 @@ class PlaceholderImageAPI(ImageAPI):
         return ImageSearchResultSet(results=results, total_number_results=len(results))
 
 
-class PlaceholderImageAPIContextManager(ImageAPIContextManager):
-    """
-    Context manager for our PlaceholderImageAPI
-    """
+@contextmanager
+def placeholder_context_manager(config):
+    """Context manager for the PlaceholderImageAPI"""
 
-    def __enter__(self) -> PlaceholderImageAPI:
-        return PlaceholderImageAPI(self._config.backend_settings.placeholder.type)
+    placeholder_type = config.backend_settings.placeholder.type
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+    yield PlaceholderImageAPI(placeholder_type)
 
 
 @hookimpl
@@ -74,6 +70,6 @@ def image_api():
     """
     return ImageAPIPlugin(
         name=PLUGIN_NAME,
-        image_api_context_manager=PlaceholderImageAPIContextManager,
+        image_api_context_manager=placeholder_context_manager,
         config_fields=CONFIG_FIELDS,
     )

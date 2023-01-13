@@ -66,6 +66,7 @@ class AppPluginManager(PluginManager):
 
         TODO: add a duplicate check just like for API names
         """
+        # Merge config fields from all registered plugins
         image_api_config = reduce(
             lambda dict_one, dict_two: {**dict_one, **dict_two},
             (
