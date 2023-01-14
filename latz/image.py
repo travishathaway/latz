@@ -35,7 +35,7 @@ class ImageAPIContextManager(Protocol):
     an implementation of [`ImageAPI`][latz.image.ImageAPI]).
     """
 
-    def __enter__(self) -> dict:
+    def __enter__(self) -> ImageAPI:
         """
         This must return an implementation of the below [`ImageAPI`][latz.image.ImageAPI] class
         """
