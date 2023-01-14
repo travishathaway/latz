@@ -1,0 +1,23 @@
+from .errors import format_all_validation_errors as format_all_validation_errors, format_validation_error as format_validation_error
+from .models import BaseAppConfig as BaseAppConfig
+from _typeshed import Incomplete
+from collections.abc import Iterable, Sequence
+from pathlib import Path
+from typing import Any, NamedTuple
+
+logger: Incomplete
+
+class ConfigError(Exception): ...
+
+class ParsedConfigFile(NamedTuple):
+    path: Path
+    data: Union[dict, None]
+    error: Union[str, None]
+    model: Union[BaseAppConfig, None]
+
+def merge_app_configs(app_configs: Iterable[BaseAppConfig], model_class: type[BaseAppConfig]) -> BaseAppConfig: ...
+def parse_config_file_as_json(path: Path) -> ParsedConfigFile: ...
+def parse_app_config_model(parsed_config: ParsedConfigFile, model_class: type[BaseAppConfig]) -> ParsedConfigFile: ...
+def parse_config_files(paths: Sequence[Path]) -> Union[tuple[ParsedConfigFile, ...], None]: ...
+def get_app_config(paths: Sequence[Path], model_class: type[BaseAppConfig]) -> BaseAppConfig: ...
+def write_config_file(config_file_data: dict[str, Any], config_file: Path) -> None: ...

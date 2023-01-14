@@ -1,10 +1,14 @@
 [tool.poetry]
 name = "latz"
-version = "0.1.2"
+version = "0.1.3"
 description = "CLI Program for downloading images. Maybe by location too..."
 authors = ["Travis Hathaway <travis.j.hathaway@gmail.com>"]
 license = "GNU v3"
 readme = "README.md"
+packages = [
+    { include = "latz/**/*.py" },
+    { include = "stubs/**/*.pyi" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"

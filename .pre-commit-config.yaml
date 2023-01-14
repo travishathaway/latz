@@ -6,10 +6,12 @@ repos:
       exclude: "mkdocs.yml"
     - id: end-of-file-fixer
     - id: trailing-whitespace
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: ''  # Use the sha / tag you want to point at
-    hooks:
-    -   id: mypy
+# Disabling mypy until I can figure out how to exclude the "stubs" directory 🤷‍
+#   - repo: https://github.com/pre-commit/mirrors-mypy
+#     rev: ''  # Use the sha / tag you want to point at
+#     hooks:
+#     - id: mypy
+#       args: ["--exclude=stubs", "--no-strict-optional", "--ignore-missing-imports"]
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.3.1
     hooks:

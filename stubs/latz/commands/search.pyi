@@ -1,0 +1,3 @@
+from ..image import ImageAPI as ImageAPI
+
+def command(ctx, query: str): ...
