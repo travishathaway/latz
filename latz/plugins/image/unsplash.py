@@ -4,6 +4,7 @@ import urllib.parse
 from contextlib import contextmanager
 from collections.abc import Iterator
 
+import httpx
 from httpx import Client, Headers
 from pydantic import BaseModel, Field
 
@@ -12,6 +13,7 @@ from ...image import (
     ImageSearchResultSet,
 )
 from .. import hookimpl, ImageAPIPlugin
+from ...exceptions import ImageAPIError
 
 #: Name of the plugin that will be referenced in our configuration
 PLUGIN_NAME = "unsplash"
@@ -54,10 +56,16 @@ class UnsplashImageAPI:
         """
         search_url = urllib.parse.urljoin(BASE_URL, SEARCH_ENDPOINT)
 
-        resp = self._client.get(search_url, params={"query": query})
-        resp.raise_for_status()
+        try:
+            resp = self._client.get(search_url, params={"query": query})
+            resp.raise_for_status()
+        except httpx.HTTPError as exc:
+            raise ImageAPIError(str(exc), original=exc)
 
         json_data = resp.json()
+
+        if not isinstance(json_data, dict):
+            raise ImageAPIError("Received malformed response from search API")
 
         search_results = tuple(
             ImageSearchResult(

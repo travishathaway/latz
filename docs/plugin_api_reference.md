@@ -6,3 +6,7 @@ ones relevant for writing plugins.
 ::: latz.image
     options:
         heading_level: 2
+
+::: latz.plugins.hookspec
+    options:
+        heading_level: 2
