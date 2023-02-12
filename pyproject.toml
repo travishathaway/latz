@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "latz"
-version = "0.1.4"
+version = "0.1.5"
 description = "CLI Program for downloading images. Maybe by location too..."
 authors = ["Travis Hathaway <travis.j.hathaway@gmail.com>"]
 license = "GNU v3"
