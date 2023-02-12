@@ -4,7 +4,8 @@ import rich_click as click
 from rich import print as rprint
 
 from ...constants import CONFIG_FILE_CWD, CONFIG_FILE_HOME_DIR
-from ...config import parse_config_file_as_json, write_config_file, ConfigError
+from ...config import parse_config_file_as_json, write_config_file
+from ...exceptions import ConfigError
 from .validators import ConfigValuesValidator
 
 # Create our validator callables

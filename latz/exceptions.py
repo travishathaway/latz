@@ -19,3 +19,7 @@ class ImageAPIError(Exception):
     def __init__(self, message, original: Exception | None = None):
         self.message = message
         self.original = original
+
+
+class ConfigError(Exception):
+    pass

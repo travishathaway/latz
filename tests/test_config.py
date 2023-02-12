@@ -27,6 +27,7 @@ def test_non_existent_config_file(
     backend, "unsplash" will be chosen and run.
     """
     mock_client = mocker.patch("latz.plugins.image.unsplash.Client")
+    mock_client().get().json.return_value = {}
     result = runner_with_non_existent_config_file.invoke(cli, ["search", "ladder"])
 
     assert result.stdout == ""

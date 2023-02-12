@@ -2,12 +2,12 @@ from collections import Counter
 from functools import reduce
 from collections.abc import Callable
 
-from click import ClickException
 from pluggy import PluginManager  # type: ignore
 from pydantic import create_model
 
 from ..constants import APP_NAME
 from ..config.models import BaseAppConfig
+from ..exceptions import LatzError
 from ..image import ImageAPI
 from .hookspec import AppHookSpecs
 from .image import unsplash, placeholder
@@ -37,7 +37,7 @@ class AppPluginManager(PluginManager):
 
         If there are duplicate names registered, we raise an exception.
 
-        :raises ClickException: Raised if duplicate values are found (same plugin
+        :raises LatzError: Raised if duplicate values are found (same plugin
                                 is registered multiple times)
         """
         if self.__image_api_names is not None:
@@ -50,7 +50,7 @@ class AppPluginManager(PluginManager):
         duplicates = tuple(value for value, count in names_counter.items() if count > 1)
 
         if len(duplicates) > 0:
-            raise ClickException(
+            raise LatzError(
                 "Duplicate values for the following 'image_search_api' found: "
                 f"{', '.join(duplicates)}"
             )
@@ -85,7 +85,7 @@ class AppPluginManager(PluginManager):
         that we can use to give us an ``ImageAPI`` object.
 
         :param app_config: Current app config object
-        :raises ClickException: Raised if we cannot find an api_context_manager object to return
+        :raises LatzError: Raised if we cannot find an api_context_manager object to return
         """
         image_api_context_manager = None
 
@@ -94,7 +94,7 @@ class AppPluginManager(PluginManager):
                 image_api_context_manager = api.image_api_context_manager
 
         if image_api_context_manager is None:
-            raise ClickException(
+            raise LatzError(
                 "Backend has been improperly configured. Please choose from the available"
                 f" backends: {', '.join(self.image_api_names)}"
             )

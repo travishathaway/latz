@@ -5,12 +5,36 @@ import rich_click as click
 from pydantic import create_model, validator
 
 from .commands import search_command, config_group
-from .config import get_app_config, BaseAppConfig, ConfigError
+from .config import get_app_config, BaseAppConfig
 from .constants import CONFIG_FILES
-from .plugins.manager import get_plugin_manager
+from .exceptions import LatzError, ConfigError
+from .plugins.manager import get_plugin_manager, AppPluginManager
 
 click.rich_click.USE_RICH_MARKUP = True
 click.rich_click.USE_MARKDOWN_EMOJI = True
+
+
+def create_app_config_class(plugin_manager: AppPluginManager) -> type[BaseAppConfig]:
+    """Creates the class that we use to create our application configuration object"""
+    # We need to dynamically define our validators because we do not know all the of the
+    # valid backends until runtime.
+    validators = {
+        "backend_validator": validator("backend", allow_reuse=True)(
+            plugin_manager.get_backend_validator_func()
+        )
+    }
+
+    # Dynamically create our new configuration object based on possible new fields
+    # from our registered plugins.
+    return cast(
+        type[BaseAppConfig],
+        create_model(
+            "AppConfig",
+            **plugin_manager.image_api_config_fields,
+            __validators__=validators,
+            __base__=BaseAppConfig
+        ),
+    )
 
 
 @click.group("latz")
@@ -27,40 +51,24 @@ def cli(ctx):
     ctx.ensure_object(Namespace)
     plugin_manager = get_plugin_manager()
 
-    # We need to dynamically define our validators because we do not know all the of the
-    # valid backends until runtime.
-    validators = {
-        "backend_validator": validator("backend", allow_reuse=True)(
-            plugin_manager.get_backend_validator_func()
-        )
-    }
-
-    # Dynamically create our new configuration object based on possible new fields
-    # from our registered plugins.
-    AppConfig = cast(
-        type[BaseAppConfig],
-        create_model(
-            "AppConfig",
-            **plugin_manager.image_api_config_fields,
-            __validators__=validators,
-            __base__=BaseAppConfig
-        ),
-    )
+    AppConfig = create_app_config_class(plugin_manager)
+    ctx.obj.config_class = AppConfig
 
     # Creates the actual config object which parses all possible configuration sources
     # listed in ``CONFIG_FILES``.
     try:
-        app_config = get_app_config(CONFIG_FILES, AppConfig)
+        ctx.obj.config = get_app_config(CONFIG_FILES, AppConfig)
     except ConfigError as exc:
         raise click.ClickException(str(exc))
 
     # Attach several properties to click's ``ctx`` object so that we have access to it
     # in our sub-commands.
-    ctx.obj.config = app_config
-    ctx.obj.image_api_context_manager = plugin_manager.get_image_api_context_manager(
-        app_config
-    )
-    ctx.obj.config_class = AppConfig
+    try:
+        ctx.obj.image_api_context_manager = (
+            plugin_manager.get_image_api_context_manager(ctx.obj.config)
+        )
+    except LatzError as exc:
+        raise click.ClickException(str(exc))
 
 
 cli.add_command(search_command)

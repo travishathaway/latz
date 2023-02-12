@@ -132,7 +132,7 @@ class AppHookSpecs:
         """
         Hookspec for the image API.
 
-        Check out the [creating plugins][creating-plugins] for more information on
+        Check out the [creating plugins][creating-plugins] guide for more information on
         using this plugin hook.
         """
         return tuple()  # default implementation returns no registered backends

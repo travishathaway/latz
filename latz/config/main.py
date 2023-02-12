@@ -11,12 +11,9 @@ from pydantic import ValidationError
 
 from .models import BaseAppConfig
 from .errors import format_validation_error, format_all_validation_errors
+from ..exceptions import ConfigError
 
 logger = logging.getLogger(__name__)
-
-
-class ConfigError(Exception):
-    pass
 
 
 class ParsedConfigFile(NamedTuple):
