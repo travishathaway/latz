@@ -1,1 +1,1 @@
-from .hookspec import hookimpl, ImageAPIPlugin  # noqa: F401
+from .hookspec import hookimpl, SearchBackendHook  # noqa: F401

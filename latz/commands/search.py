@@ -1,10 +1,7 @@
-from collections.abc import Callable
-from typing import cast, ContextManager, Any
-
 import click
 from rich import print as rprint
 
-from latz.image import ImageAPI
+from latz.fetch import get_fetch_client
 from latz.exceptions import ImageAPIError
 
 
@@ -15,15 +12,15 @@ def command(ctx, query: str):
     """
     Command that retrieves an image based on a search term
     """
-    image_api_context_manager = cast(
-        Callable[[Any], ContextManager[ImageAPI]], ctx.obj.image_api_context_manager
-    )
+    client = get_fetch_client()
 
-    with image_api_context_manager(ctx.obj.config) as api:
-        try:
-            result_set = api.search(query)
-        except ImageAPIError as exc:
-            raise click.ClickException(str(exc))
+    try:
+        result_set = []
 
-        for res in result_set.results:
-            rprint(res)
+        for search_backend in ctx.obj.plugin_manager.hook.search_backend():
+            result_set.append(search_backend.search(client, ctx.obj.config, query))
+    except ImageAPIError as exc:
+        raise click.ClickException(str(exc))
+
+    for res in result_set:
+        rprint(res)

@@ -6,9 +6,7 @@ from pluggy import PluginManager  # type: ignore
 from pydantic import create_model
 
 from ..constants import APP_NAME
-from ..config.models import BaseAppConfig
 from ..exceptions import LatzError
-from ..image import ImageAPI
 from .hookspec import AppHookSpecs
 from .image import unsplash, placeholder
 
@@ -21,18 +19,18 @@ class AppPluginManager(PluginManager):
 
     def __init__(self, *args, **kwargs):
         # We use this to cache the value of
-        self.__image_api_names = None
+        self.__search_backend_hooks = None
 
         super().__init__(*args, **kwargs)
 
     def reset_cache(self) -> None:
         """Resets all cached properties"""
-        self.__image_api_names = None
+        self.__search_backend_hooks = None
 
     @property
-    def image_api_names(self) -> tuple[str, ...]:
+    def search_backend_names(self) -> tuple[str, ...]:
         """
-        Get the names of available image search apis that are currently configured.
+        Get the names of available search backends that are currently configured.
         We cache this once per run.
 
         If there are duplicate names registered, we raise an exception.
@@ -40,78 +38,62 @@ class AppPluginManager(PluginManager):
         :raises LatzError: Raised if duplicate values are found (same plugin
                                 is registered multiple times)
         """
-        if self.__image_api_names is not None:
-            return self.__image_api_names
+        if self.__search_backend_hooks is not None:
+            return self.__search_backend_hooks
 
-        self.__image_api_names = tuple(
-            image_search_api.name for image_search_api in self.hook.image_api()
+        self.__search_backend_hooks = tuple(
+            search_backend.name for search_backend in self.hook.search_backend()
         )
-        names_counter = Counter(self.__image_api_names)
+        names_counter = Counter(self.__search_backend_hooks)
         duplicates = tuple(value for value, count in names_counter.items() if count > 1)
 
         if len(duplicates) > 0:
             raise LatzError(
-                "Duplicate values for the following 'image_search_api' found: "
-                f"{', '.join(duplicates)}"
+                "Duplicate values for the hook 'search_backend' found: "
+                f"{', '.join(duplicates)}. Please make sure to define a unique 'name' field"
             )
 
-        return self.__image_api_names
+        return self.__search_backend_hooks
 
     @property
-    def image_api_config_fields(self) -> dict:
+    def search_backend_config_fields(self) -> dict:
         """
-        Returns all the registered config fields for the image_search_api plugins.
-        We perform a merge of all registered ``config_fields`` dictionaries that represent
+        Returns all the registered config fields for the `search_backend` plugins.
+        We perform a merge of all registered `config_fields` dictionaries that represent
         the new configuration fields that will be added.
 
-        TODO: add a duplicate check just like for API names
+        TODO: add a duplicate check just like for search backend names
         """
         # Merge config fields from all registered plugins
-        image_api_config = reduce(
+        search_backend_config = reduce(
             lambda dict_one, dict_two: {**dict_one, **dict_two},
             (
-                image_search_api.config_fields
-                for image_search_api in self.hook.image_api()
+                search_backends.config_fields
+                for search_backends in self.hook.search_backend()
             ),
         )
 
-        BackendSettings = create_model("BackendSettings", **image_api_config)
+        SearchBackendSettings = create_model("BackendSettings", **search_backend_config)
 
-        return {"backend_settings": (BackendSettings, BackendSettings().dict())}
-
-    def get_image_api_context_manager(self, app_config: BaseAppConfig) -> ImageAPI:
-        """
-        Gets the currently configured api_context_manager. This is a context manager
-        that we can use to give us an ``ImageAPI`` object.
-
-        :param app_config: Current app config object
-        :raises LatzError: Raised if we cannot find an api_context_manager object to return
-        """
-        image_api_context_manager = None
-
-        for api in self.hook.image_api():
-            if api.name == app_config.backend:
-                image_api_context_manager = api.image_api_context_manager
-
-        if image_api_context_manager is None:
-            raise LatzError(
-                "Backend has been improperly configured. Please choose from the available"
-                f" backends: {', '.join(self.image_api_names)}"
+        return {
+            "search_backend_settings": (
+                SearchBackendSettings,
+                SearchBackendSettings().dict(),
             )
-
-        return image_api_context_manager
+        }
 
     def get_backend_validator_func(self) -> Callable:
         """Returns the validator function that is used by Pydantic when parsing configuration"""
 
-        def validate_backend(cls, value):
-            if value not in self.image_api_names:
-                valid_names = ", ".join(self.image_api_names)
-                raise ValueError(
-                    f"'{value}' is not valid choice for backend. "
-                    f"Available choices: {valid_names}"
-                )
-            return value
+        def validate_backend(cls, values):
+            for value in values:
+                if value not in self.search_backend_names:
+                    valid_names = ", ".join(self.search_backend_names)
+                    raise ValueError(
+                        f"'{value}' is not valid choice for a search backend. "
+                        f"Available choices: {valid_names}"
+                    )
+            return values
 
         return validate_backend
 
