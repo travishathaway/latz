@@ -1,8 +1,6 @@
 """
 Configuration related tests.
 """
-from unittest import mock
-
 from click.testing import CliRunner
 
 from latz.cli import cli
@@ -15,8 +13,10 @@ def test_bad_backend(runner_with_bad_backend: CliRunner):
     result = runner_with_bad_backend.invoke(cli, ["search", "search_term"])
 
     assert result.exit_code == 1
-    assert "backend:" in result.stdout
-    assert "'does_not_exist' is not valid choice for backend" in result.stdout
+    assert "search_backends:" in result.stdout
+    assert (
+        "'does_not_exist' is not a valid choice for a search backend" in result.stdout
+    )
 
 
 def test_non_existent_config_file(
@@ -26,23 +26,18 @@ def test_non_existent_config_file(
     If no configuration files exists, everything thing should still work and the default
     backend, "unsplash" will be chosen and run.
     """
-    mock_client = mocker.patch("latz.plugins.image.unsplash.Client")
-    mock_client().get().json.return_value = {}
+    mock_client_get = mocker.patch("latz.plugins.image.unsplash._get", return_value={})
     result = runner_with_non_existent_config_file.invoke(cli, ["search", "ladder"])
 
-    assert result.stdout == ""
+    assert "ImageSearchResultSet" in result.stdout
+    assert "total_number_results=0" in result.stdout
     assert result.exit_code == 0
-
-    expected_mock_call = mock.call().get(
-        "https://api.unsplash.com/search/photos", params={"query": "ladder"}
-    )
-    assert expected_mock_call in mock_client.mock_calls
+    assert len(mock_client_get.mock_calls) == 1
 
 
 def test_bad_config_parameters(runner_with_bad_config_parameters: CliRunner):
     """
-    If no configuration files exists, everything thing should still work and the default
-    backend, "unsplash" will be chosen and run.
+    If a bad configuration file is found, application should raise an error and exit.
     """
     result = runner_with_bad_config_parameters.invoke(cli, ["search", "ladder"])
 
@@ -54,10 +49,10 @@ def test_bad_config_parameters(runner_with_bad_config_parameters: CliRunner):
 
 def test_multiple_config_files(runner_with_multiple_config_files: CliRunner, mocker):
     """
-    If no configuration files exists, everything thing should still work and the default
-    backend, "unsplash" will be chosen and run.
+    If multiple configuration files are found, they should all be parsed and the command
+    should be run.
     """
-    mocker.patch("latz.plugins.image.unsplash.Client")
+    mocker.patch("latz.plugins.image.unsplash._get", return_value={})
     result = runner_with_multiple_config_files.invoke(cli, ["search", "ladder"])
 
     assert result.exit_code == 0

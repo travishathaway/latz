@@ -25,7 +25,9 @@ class ConfigValuesValidator:
         checked_values = {}
 
         for value in values:
-            checked_values.update(self.validate_single_value(value))
+            checked_values.update(
+                self.validate_single_value(value, ctx.obj.config_class)
+            )
 
         try:
             ctx.obj.config_class(**{**current_config, **checked_values})
@@ -34,7 +36,7 @@ class ConfigValuesValidator:
 
         return checked_values
 
-    def validate_single_value(self, value: str) -> dict:
+    def validate_single_value(self, value: str, config_class) -> dict:
         """
         Validates a single config parameter. This is done by first matching the
         string value against a regex. Afterwards we return this value in its dictionary
@@ -47,9 +49,16 @@ class ConfigValuesValidator:
         if not match:
             raise click.BadParameter(self._format_bad_format_error(value))
 
-        parameter, value = match.groups()
+        parameter, parsed_value = match.groups()
+        schema = config_class.schema().get("properties", {})
+        parameter_type = get_param_type(schema, parameter)
 
-        return get_nested_dict_from_path(parameter, value)
+        if parameter_type == "array":
+            parsed_value = parsed_value.split(
+                ","
+            )  # TODO: "," should be defined as a constant
+
+        return get_nested_dict_from_path(parameter, parsed_value)
 
     @staticmethod
     def _format_bad_format_error(value):
@@ -61,6 +70,27 @@ class ConfigValuesValidator:
     @staticmethod
     def _format_invalid_parameter_error(parameter):
         return f"'{parameter}' is not a valid configuration parameter"
+
+
+def get_param_type(schema, parameter: str) -> str | None:
+    """
+    Tries to determine the parameter type based on the schema and the parameter name.
+
+    This currently only works for "top-level" parameters (i.e. "search_backends")
+    """
+    param_type = None
+    param_schema = None
+
+    for param in parameter.split("."):  # TODO: this "." should be defined as a constant
+        if param_schema is None:
+            param_schema = schema.get(param)
+        else:
+            param_schema = param_schema.get(param)
+
+        if param_schema.get("type"):
+            param_type = param_schema.get("type")
+
+    return param_type
 
 
 def get_dotted_path_value(nest: dict, dotted_path: str) -> Any:

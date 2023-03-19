@@ -9,7 +9,7 @@ class BaseAppConfig(BaseSettings):
     config files, command line arguments and environment variables.
     """
 
-    search_backends: tuple[str] = Field(
+    search_backends: tuple[str, ...] = Field(
         default=("unsplash",),
         description="Image search backend to use for retrieving images.",
     )

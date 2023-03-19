@@ -25,11 +25,11 @@ class PlaceholderBackendConfig(BaseModel):
     )
 
 
-CONFIG_FIELDS = {PLUGIN_NAME: (PlaceholderBackendConfig, {"type": "kitten"})}
+CONFIG_FIELDS = {PLUGIN_NAME: PlaceholderBackendConfig()}
 
 
-def search(client, config, query: str) -> ImageSearchResultSet:
-    placeholder_type = config.backend_settings.placeholder.type
+async def search(client, config, query: str) -> ImageSearchResultSet:
+    placeholder_type = config.search_backend_settings.placeholder.type
     base_url = f"https://place{placeholder_type}.com"
     sizes = ((200, 300), (600, 500), (1000, 800))
 
@@ -42,11 +42,13 @@ def search(client, config, query: str) -> ImageSearchResultSet:
         for width, height in sizes
     )
 
-    return ImageSearchResultSet(results=results, total_number_results=len(results))
+    return ImageSearchResultSet(
+        results=results, total_number_results=len(results), search_backend=PLUGIN_NAME
+    )
 
 
 @hookimpl
-def image_api():
+def search_backend():
     """
     Registers our Unsplash image API backend
     """

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections import Counter
 from functools import reduce
 from collections.abc import Callable
@@ -7,7 +9,7 @@ from pydantic import create_model
 
 from ..constants import APP_NAME
 from ..exceptions import LatzError
-from .hookspec import AppHookSpecs
+from .hookspec import AppHookSpecs, SearchBackendHook
 from .image import unsplash, placeholder
 
 
@@ -18,7 +20,7 @@ class AppPluginManager(PluginManager):
     """
 
     def __init__(self, *args, **kwargs):
-        # We use this to cache the value of
+        # This is used as a cache
         self.__search_backend_hooks = None
 
         super().__init__(*args, **kwargs)
@@ -55,6 +57,17 @@ class AppPluginManager(PluginManager):
 
         return self.__search_backend_hooks
 
+    def get_configured_search_backends(self, config) -> tuple[SearchBackendHook, ...]:
+        """
+        Get the search backends that are currently configured to be used.
+        These are differently than those that have simply been registered.
+        """
+        return tuple(
+            search_backend
+            for search_backend in self.hook.search_backend()
+            if search_backend.name in config.search_backends
+        )
+
     @property
     def search_backend_config_fields(self) -> dict:
         """
@@ -90,7 +103,7 @@ class AppPluginManager(PluginManager):
                 if value not in self.search_backend_names:
                     valid_names = ", ".join(self.search_backend_names)
                     raise ValueError(
-                        f"'{value}' is not valid choice for a search backend. "
+                        f"'{value}' is not a valid choice for a search backend. "
                         f"Available choices: {valid_names}"
                     )
             return values

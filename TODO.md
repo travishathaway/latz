@@ -26,3 +26,9 @@ I think it will be necessary to write an actual plugin validation piece to
 make sure that authors have written their plugins correctly. I hope it won't
 be that hard. It will make the user experience better though when writing the
 plugins.
+
+
+## Bugs
+
+- `latz config set search_backend_settings.unsplash.access_key` will delete other settings
+- `latz config set search_backends=unsplash` does not work

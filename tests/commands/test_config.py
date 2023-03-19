@@ -20,14 +20,14 @@ def test_show_config(runner: tuple[CliRunner, Path]):
 
     json_data = json.loads(result.stdout)
 
-    assert json_data.get("backend") == "placeholder"
+    assert json_data.get("search_backends") == ["placeholder"]
 
-    placeholder = json_data.get("backend_settings", {}).get("placeholder")
+    placeholder = json_data.get("search_backend_settings", {}).get("placeholder")
 
     assert placeholder
     assert placeholder.get("type") == "kitten"
 
-    unsplash = json_data.get("backend_settings", {}).get("unsplash")
+    unsplash = json_data.get("search_backend_settings", {}).get("unsplash")
 
     assert unsplash
     assert unsplash.get("access_key") == ""
@@ -39,7 +39,7 @@ def test_set_config_backend(runner: tuple[CliRunner, Path], mocker):
     """
     cmd_runner, config_file = runner
     mocker.patch("latz.commands.config.commands.CONFIG_FILE_CWD", config_file)
-    result = cmd_runner.invoke(cli, [COMMAND, "set", "backend=unsplash"])
+    result = cmd_runner.invoke(cli, [COMMAND, "set", "search_backends=unsplash"])
 
     assert result.stdout == ""
     assert result.exit_code == 0
@@ -50,14 +50,14 @@ def test_set_config_backend(runner: tuple[CliRunner, Path], mocker):
 
     json_data = json.loads(result.stdout)
 
-    assert json_data.get("backend") == "unsplash"
+    assert json_data.get("search_backends") == ["unsplash"]
 
-    placeholder = json_data.get("backend_settings", {}).get("placeholder")
+    placeholder = json_data.get("search_backend_settings", {}).get("placeholder")
 
     assert placeholder
     assert placeholder.get("type") == "kitten"
 
-    unsplash = json_data.get("backend_settings", {}).get("unsplash")
+    unsplash = json_data.get("search_backend_settings", {}).get("unsplash")
 
     assert unsplash
     assert unsplash.get("access_key") == ""

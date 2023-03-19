@@ -15,8 +15,8 @@ def runner(mocker, tmp_path):
     mocker.patch("latz.cli.CONFIG_FILES", (config_file,))
 
     config = {
-        "backend": "placeholder",
-        "backend_settings": {
+        "search_backends": ["placeholder"],
+        "search_backend_settings": {
             "placeholder": {
                 "type": "kitten",
             }
@@ -38,7 +38,7 @@ def runner_with_bad_backend(tmp_path, mocker):
     mocker.patch("latz.cli.CONFIG_FILES", (config_file,))
 
     config = {
-        "backend": "does_not_exist",
+        "search_backends": ["does_not_exist"],
     }
 
     with runner.isolated_filesystem(tmp_path):
@@ -94,11 +94,11 @@ def runner_with_multiple_config_files(tmp_path, mocker):
     )
 
     config_one_data = {
-        "backend": "unsplash",
+        "search_backends": ["unsplash"],
     }
 
     config_two_data = {
-        "backend": "placeholder",
+        "search_backends": ["placeholder"],
     }
 
     with runner.isolated_filesystem(tmp_path):

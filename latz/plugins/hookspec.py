@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Awaitable
 from typing import NamedTuple, Any
 from collections.abc import Callable
 
@@ -53,7 +53,7 @@ class SearchBackendHook(NamedTuple):
     ```
     """
 
-    search: Callable[[httpx.Client, Any, str], ImageSearchResultSet]
+    search: Callable[[httpx.AsyncClient, Any, str], Awaitable[ImageSearchResultSet]]
     """
     Callable that implements the search hook.
     """
