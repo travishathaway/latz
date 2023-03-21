@@ -1,4 +1,4 @@
-from collections.abc import Iterable, Mapping, Awaitable
+from collections.abc import Iterable, Awaitable
 from typing import NamedTuple, Any
 from collections.abc import Callable
 
@@ -11,9 +11,6 @@ from latz.image import ImageSearchResultSet
 
 hookspec = pluggy.HookspecMarker(APP_NAME)
 hookimpl = pluggy.HookimplMarker(APP_NAME)
-
-DefaultValues = Mapping[str, Any]
-ConfigFields = Mapping[str, tuple[type[BaseModel], DefaultValues]]
 
 
 class SearchBackendHook(NamedTuple):
@@ -58,7 +55,7 @@ class SearchBackendHook(NamedTuple):
     Callable that implements the search hook.
     """
 
-    config_fields: ConfigFields
+    config_fields: BaseModel
     """
     Mapping defining the namespace for the config parameters, the pydantic
     model to use and the default values it should contain.

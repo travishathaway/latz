@@ -12,6 +12,13 @@ from ..exceptions import LatzError
 from .hookspec import AppHookSpecs, SearchBackendHook
 from .image import unsplash, placeholder
 
+#: Name of the dynamically generated pydantic model for search backend settings.
+#: These settings are registered via plugins.
+SEARCH_BACKEND_SETTINGS_MODEL = "SearchBackendSettings"
+
+#: Key used in the configuration of the dynamically generated settings from plugins.
+SEARCH_BACKEND_SETTINGS_KEY = "search_backend_settings"
+
 
 class AppPluginManager(PluginManager):
     """
@@ -81,15 +88,17 @@ class AppPluginManager(PluginManager):
         search_backend_config = reduce(
             lambda dict_one, dict_two: {**dict_one, **dict_two},
             (
-                search_backends.config_fields
+                {search_backends.name: search_backends.config_fields}
                 for search_backends in self.hook.search_backend()
             ),
         )
 
-        SearchBackendSettings = create_model("BackendSettings", **search_backend_config)
+        SearchBackendSettings = create_model(
+            SEARCH_BACKEND_SETTINGS_MODEL, **search_backend_config
+        )
 
         return {
-            "search_backend_settings": (
+            SEARCH_BACKEND_SETTINGS_KEY: (
                 SearchBackendSettings,
                 SearchBackendSettings().dict(),
             )

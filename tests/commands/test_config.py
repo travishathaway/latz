@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
 from latz.cli import cli
@@ -33,9 +34,9 @@ def test_show_config(runner: tuple[CliRunner, Path]):
     assert unsplash.get("access_key") == ""
 
 
-def test_set_config_backend(runner: tuple[CliRunner, Path], mocker):
+def test_set_search_backends(runner: tuple[CliRunner, Path], mocker):
     """
-    Makes sure that we can  update the backend via the "config set" subcommand
+    Makes sure that we can  update the "search_backends" via the "config set" subcommand
     """
     cmd_runner, config_file = runner
     mocker.patch("latz.commands.config.commands.CONFIG_FILE_CWD", config_file)
@@ -63,6 +64,39 @@ def test_set_config_backend(runner: tuple[CliRunner, Path], mocker):
     assert unsplash.get("access_key") == ""
 
 
+@pytest.mark.parametrize(
+    "parameter,expected",
+    [
+        ("search_backend_settings.unsplash.access_key", "test"),
+        ("search_backend_settings.placeholder.type", "bear"),
+    ],
+)
+def test_set_search_backend_settings(
+    runner: tuple[CliRunner, Path], mocker, parameter, expected
+):
+    """
+    Makes sure that we can  update the "search_backend_settings" via the "config set" subcommand
+    """
+    cmd_runner, config_file = runner
+    mocker.patch("latz.commands.config.commands.CONFIG_FILE_CWD", config_file)
+    result = cmd_runner.invoke(cli, [COMMAND, "set", f"{parameter}={expected}"])
+
+    assert result.stdout == ""
+    assert result.exit_code == 0
+
+    result = cmd_runner.invoke(cli, [COMMAND, "show"])
+
+    assert result.exit_code == 0
+
+    received_value = json.loads(result.stdout)
+
+    for param in parameter.split("."):
+        if received_value:
+            received_value = received_value.get(param)
+
+    assert received_value == expected
+
+
 def test_set_bad_config_backend(runner: tuple[CliRunner, Path], mocker):
     """
     Test the case when we try to pass in a bad value for "backend".
@@ -71,7 +105,7 @@ def test_set_bad_config_backend(runner: tuple[CliRunner, Path], mocker):
     mocker.patch("latz.commands.config.commands.CONFIG_FILE_CWD", config_file)
     result = cmd_runner.invoke(cli, [COMMAND, "set", "backend=bad_value"])
 
-    assert result.exit_code == 1
+    assert result.exit_code == 2
 
 
 def test_set_config_backend_with_bad_config_file(

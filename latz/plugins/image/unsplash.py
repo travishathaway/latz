@@ -32,10 +32,6 @@ class UnsplashBackendConfig(BaseModel):
     access_key: str = Field(description="Access key for the Unsplash API")
 
 
-#: These are the configuration settings we export when registering our plugin
-CONFIG_FIELDS = {PLUGIN_NAME: UnsplashBackendConfig(access_key="")}
-
-
 async def _get(client: httpx.AsyncClient, url: str, query: str) -> dict:
     """
     Wraps `client.get` call in a try, except so that we raise
@@ -92,5 +88,5 @@ def search_backend():
     return SearchBackendHook(
         name=PLUGIN_NAME,
         search=search,
-        config_fields=CONFIG_FIELDS,
+        config_fields=UnsplashBackendConfig(access_key=""),
     )

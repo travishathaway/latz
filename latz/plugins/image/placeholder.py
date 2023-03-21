@@ -25,9 +25,6 @@ class PlaceholderBackendConfig(BaseModel):
     )
 
 
-CONFIG_FIELDS = {PLUGIN_NAME: PlaceholderBackendConfig()}
-
-
 async def search(client, config, query: str) -> ImageSearchResultSet:
     placeholder_type = config.search_backend_settings.placeholder.type
     base_url = f"https://place{placeholder_type}.com"
@@ -55,5 +52,5 @@ def search_backend():
     return SearchBackendHook(
         name=PLUGIN_NAME,
         search=search,
-        config_fields=CONFIG_FIELDS,
+        config_fields=PlaceholderBackendConfig(),
     )
