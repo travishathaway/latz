@@ -8,12 +8,13 @@
 [pydantic-dynamic-models]: https://docs.pydantic.dev/usage/models/#dynamic-model-creation
 [latz_imgur_main]: https://github.com/travishathaway/latz-imgur/blob/main/latz_imgur/main.py
 [python-protocol]: https://docs.python.org/
+[httpx-async-client]: https://www.python-httpx.org/api/#asyncclient
 
 
-This is a guide that will show you how to create your own latz image API plugin.
-To illustrate how to do this, we will write a plugin for the Imgur image search API.
-We be starting from just an empty directory and using [poetry][poetry] packaging tool
-to show how you can easily upload your plugin to PyPI once we are finished.
+This guide will show you how to create your own latz search backend hook.
+These search backend hooks allow you to add additional image search APIs to latz.
+Once complete, you will be able to use these new search backends with the `latz search`
+command.
 
 Check out [latz-imgur on GitHub][latz-imgur] if you would like to skip ahead and browse
 the final working example.
@@ -24,8 +25,8 @@ To follow along, you will need to create an Imgur account and register an applic
 via their web interface. Once complete, save the `client_id` you receive as we will be using
 that for this application. Head over to [their documentation][imgur-docs] for more information.
 
-For managing dependencies and publishing to PyPI, we use the tool [poetry][poetry]. Please
-install and configure this if you do not currently have it on your computer.
+For managing dependencies and to make it easier to publish to PyPI later, we use the tool
+[poetry][poetry]. Please install and configure this if you do not currently have it on your computer.
 
 ## Setting up our environment
 
@@ -96,213 +97,131 @@ class ImgurBackendConfig(BaseModel):
     """
 
     access_key: str = Field(description="Access key for the Imgur API")
-
-
-# Module level constant declaring all configuration settings for this plugin
-CONFIG_FIELDS = {
-    PLUGIN_NAME: (ImgurBackendConfig, {"access_key": ""})
-}
 ```
 
-<!-- TODO: link to this dynamic model code in the following admonition -->
-
 !!! note
-    Latz uses this `CONFIG_FIELDS` dictionary to dynamically generate its own `AppConfig`
+    Latz uses this `ImgurBackendConfig` model to dynamically generate its own `AppConfig`
     model at runtime. Check out [Dynamic model creation][pydantic-dynamic-models] in the
     [pydantic docs][pydantic] to learn more.
 
-### Image search API
+### Search backend hook function
 
 Now that our plugin is able to gather the configuration settings necessary to run (i.e. the
-"access_key" we get from Imgur), we are ready to write the actual search API code. Latz requires
-us to first write a class a that implements the [protocol][python-protocol] class
-[`ImageAPI`][latz.image.ImageAPI].
-The only thing that this protocol requires us to do is define a `search` method which returns the
-`ImageSearchResultSet` type. Furthermore, the `ImageSearchResultSet` type must be instantiated
-with a sequence of `ImageSearchResult` .
+"access_key" we get from Imgur), we are ready to write the actual search API code. To make this
+work, we need to define an async search function that returns an `ImageSearchResultSet`.
+Latz will pass an instance of the [httpx.AsyncClient][httpx-async-client], the application
+configuration and the search query to this function for us.
 
-Tying all of these requirements together, below is an example of what this class could look like:
+Below is an example of what this could look like:
 
 !!! note
     Click on the tool tips in the code to learn more :thinking: :books:
 
 ```python title="latz_imgur/main.py"
-
 import urllib.parse
-from typing import Any
 
 import httpx
 
-from latz.image import ImageSearchResult, ImageSearchResultSet
-
+from latz.exceptions import SearchBackendError
+from latz.image import ImageSearchResultSet, ImageSearchResult
 
 #: Base URL for the Imgur API
 BASE_URL = "https://api.imgur.com/3/"
 
 #: Endpoint used for searching images
-SEARCH_ENDPOINT = "gallery/search"
+SEARCH_ENDPOINT = urllib.parse.urljoin(BASE_URL, "gallery/search")
 
-class ImgurImageAPI: # (1)
+async def search(client, config, query: str) -> ImageSearchResultSet: # (1)
     """
-    Implementation of ImageAPI for use with the Imgur API:
-        https://apidocs.imgur.com/
+    Search hook that will be invoked by latz while invoking the "search" command
     """
+    client.headers = httpx.Headers({
+        "Authorization": f"Client-ID {config.search_backend_settings.imgur.access_key}"
+    })
+    json_data = await _get(client, SEARCH_ENDPOINT, query)
 
-    def __init__(self, client: httpx.Client):
-        """
-        Attach a `httpx.Client` object to our API
-        """
-        self._client = client
-
-    @staticmethod
-    def _get_image_search_result_record(
-            record_image: dict[str, Any]
-    ) -> ImageSearchResult:  # (2)
-        """
-        Helper method used to create `ImageSearchResult` objects
-        """
-        return ImageSearchResult(
+    search_results = tuple(
+        ImageSearchResult(  # (2)
             url=record_image.get("link"),
             width=record_image.get("width"),
             height=record_image.get("height")
         )
+        for record in json_data.get("data", tuple())
+        for record_image in record.get("images", tuple())
+    )
 
-    def search(self, query: str) -> ImageSearchResultSet: # (3)
-        """
-        Find images based on a `query` and return an `ImageSearchResultSet`
-        """
-        search_url = urllib.parse.urljoin(BASE_URL, SEARCH_ENDPOINT)
+    return ImageSearchResultSet(
+        search_results, len(search_results), search_backend=PLUGIN_NAME
+    )
 
-        resp = self._client.get(search_url, params={"q": query})
+async def _get(client: httpx.AsyncClient, url: str, query: str) -> dict:
+    """
+    Wraps `client.get` call in a try, except so that we raise
+    an application specific exception instead.
+
+    :raises SearchBackendError: Encountered during problems querying the API
+    """
+    try:
+        resp = await client.get(url, params={"query": query})
         resp.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise SearchBackendError(str(exc), original=exc)
 
-        json_data = resp.json()
+    json_data = resp.json()
 
-        search_results = tuple(
-            self._get_image_search_result_record(record_image)
-            for record in json_data.get("data", tuple())
-            for record_image in record.get("images", tuple())
-        )
+    if not isinstance(json_data, dict):
+        raise SearchBackendError("Received malformed response from search backend")
 
-        return ImageSearchResultSet(
-            search_results, len(json_data.get("data", tuple()))
-        )
+    return json_data
 ```
 
-1. The API class defined here accepts a `httpx.Client` object so that it can query
-   the Imgur API. To properly function as a latz plugin, this class must also define a
-   `search` method (see below), which is specified by the latz [`ImageAPI`][latz.image.ImageAPI]
-   protocol.
+1. The arguments passed to this function give you everything you need to make a search
+   request. The `client` is a [httpx.AsyncClient][httpx-async-client], the `config` object
+   is the application configuration and the `query` string is the search string passed in
+   from the command line.
 2. [`ImageSearchResult`][latz.image.ImageSearchResult] is a special type defined by latz.
    Using this type helps ensure the result you return will be properly rendered.
-3. Here, we implement the `search` method required by the [`ImageAPI`][latz.image.ImageAPI]
-   protocol. [`ImageSearchResultSet`][latz.image.ImageSearchResultSet] is a type defined
-   by latz to help organize results returned by the [`ImageAPI`][latz.image.ImageAPI] classes.
-
-
-### Image API context manager
-
-We now have an `ImgurImageAPI` class that is capable of querying the Imgur API and returning
-the types of results that latz needs. You will notice that this class accepts a `httpx.Client`
-object which it uses to make the actual HTTP requests. We now need to write the code that
-will instantiate this object and pass it into the `ImgurImageAPI` class.
-
-To do this, we create a context manager. This context manager will be registered with latz
-itself and this is how the application will make a new connection objects and run queries.
-Below, is an implementation of this context manager using Python's `contextlib` module:
-
-```python title="latz_imgur/main.py"
-from contextlib import contextmanager
-from typing import Iterator
-
-import httpx
-
-
-@contextmanager
-def imgur_context_manager(config) -> Iterator[ImgurImageAPI]:  # (1)
-    """
-    Context manager that returns the `ImgurImageAPI` we wish to use
-
-    This specific context manager handles setting up and tearing down the `httpx.Client`
-    connection that we use in this plugin.
-    """
-    client = httpx.Client()
-    client.headers = httpx.Headers({ # (2)
-        "Authorization": f"Client-ID {config.backend_settings.imgur.access_key}"
-    })
-
-    try:
-        yield ImgurImageAPI(client)
-    finally:
-        client.close() # (3)
-```
-
-1. All image API context managers will receive a `config` object holding applicable settings for
-   the configured image API backend. This context manager must also yield an instantiated object
-   that implements the [`ImageAPI`][latz.image.ImageAPI].
-2. These are the headers that the Imgur API expects. We are able to retrieve the `client_id` from
-   `config` object that is pass into this function.
-3. We use context managers so that we can perform any clean up actions necessary
-
-
-!!! note
-    **Why use a context manager?**
-
-    Using a context manager allows plugin authors to use libraries which made need to perform clean
-    up actions on connections made. This is not only important
-    for the `httpx` library but could come in handy if we ever decide to implement a plugin using a
-    database connections. Python's also `contextlib.contextmanager` decorator makes these fairly
-    simple to define, reducing the complexity for plugin authors.
-
 
 ### Registering everything with latz
 
 We are now at the final step: registering everything we have written with latz. To do this,
 we need to use the `latz.plugins.hookimpl` decorator to register our plugins. We do this
-by decorating a function called `image_api` that returns a `ImageAPIPlugin` type. The
-`ImageAPIPlugin` type is an object which has three fields:
+by decorating a function called `search_backend` that returns a `SearchBackendHook` object.
+The `SearchBackendHook` object is an object which has three fields:
 
-- `name`: name of the plugin that users will use to specify it their configuraiton
-- `image_api_context_manager`: context manager that returns the [`ImageAPI`][latz.image.ImageAPI]
-   class that we defined.t
-- `config_fields`: config fields that we defined in the first step. This what allows latz to
-   register these settings and make them available to users.
+- `name`: name of the plugin that users will use to specify it their configuration
+- `search`: async function that will be called to search for images
+- `config_fields`: Pydantic model representing the config fields we want to expose in the
+   application
 
 Here is what this function looks like:
 
 ```python title="latz_imgur/main.py"
-from latz.plugins import hookimpl, ImageAPIPlugin
-
+from latz.plugins import hookimpl, SearchBackendHook
 
 @hookimpl
-def image_api():
+def search_backend():
     """
     Registers our Imgur image API backend
     """
-    return ImageAPIPlugin(
+    return SearchBackendHook(
         name=PLUGIN_NAME,
-        image_api_context_manager=imgur_context_manager,
-        config_fields=CONFIG_FIELDS,
+        search=search,
+        config_fields=ImgurBackendConfig(access_key=""),
     )
 ```
 
 ## Wrapping up
 
-In this guide, we showed how to create a latz image API plugin. The most important steps
+In this guide, we showed how to create a latz search backend hook. The most important steps
 were:
 
 1. Creating our configuration fields, so we can allow users of the plugin to define necessary
    access tokens
-2. Creating the actual `ImgurImageAPI` object which implemented the [`ImageAPI`][latz.image.ImageAPI]
-   protocol.
-3. Creating the image API context manager for creating our HTTP client and `ImgurImageAPI` object
-4. Tying everything together by creating an `image_api` function decorated by the `latz.plugins.hookimpl`.
-   This function's only responsibility is to return an `ImageAPIPlugin` object that combines everything
-   we have written in this module so far.
+2. Creating the `search` function which returns an [`ImageSearchResultSet`][latz.image.ImageSearchResultSet]
+   object.
+3. Tying everything together by creating an `search_backend` function decorated by `latz.plugins.hookimpl`.
+   This function's only responsibility is to return an [`SearchBackendHook`][latz.plugins.hookspec.SearchBackendHook]
+   object that combines everything we have written in this module so far.
 
-When adapting this code to write future plugins, it is important to realize that you may not
-always have to define configuration settings (perhaps your API is completely open). But, the things
-that will remain constant is the [`ImageAPI`][latz.image.ImageAPI] protocol. This protocol is a contract
-between your plugin and latz, and both parties must adhere to it for a smooth ride :sunglasses: 🚗.
-
-Happy plugin writing ✌️
+Thanks for following along and happy plugin writing ✌️

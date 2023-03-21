@@ -53,17 +53,50 @@ $ cd latz
 $ pip install -e .
 ```
 
+### Usage
+
+Latz comes initially configured with the "unsplash" image search backend. To use this,
+you will need to create an Unsplash account and create a test application. After getting
+your "access_key", you can set this value by running this command:
+
+```bash
+$ latz config set search_backend_settings.unsplash.access_key=<YOUR_ACCESS_KEY>
+```
+
+Once this is configured, you can search Unsplash for bunny pictures:
+
+```bash
+$ latz search "bunny"
+[
+    ImageSearchResultSet(
+        results=(
+            ImageSearchResult(
+                url='https://unsplash.com/photos/u_kMWN-BWyU/download?ixid=MnwzOTMwOTR8MHwxfHNlYXJjaHwxfHxidW5ueXxlbnwwfHx8fDE2Nzk0MTA2NzQ',
+                width=3456,
+                height=5184
+            ),
+            # ... results truncated
+        ),
+        total_number_results=10,
+        search_backend='unsplash'
+    )
+]
+```
+
 ### Configuring
 
-latz comes initially configured with the "unsplash" image search backend. To use this,
-you will need to create an Unsplash account and create a test application. After getting
-your "access_key", you will need to configure it by adding it to your `.latz.json`
-config file. An example is show below:
+The configuration for latz is stored in your home direct and is in the JSON format.
+Below is a what a default version of this configuration looks like:
 
 ```json
 {
-  "backend": "unsplash",
-  "backend_settings": {
+  "search_backends": [
+    "unsplash"
+  ],
+  "search_backend_settings": {
+    "placeholder": {
+      "type": "kitten"
+    },
     "unsplash": {
       "access_key": "your-access-key"
     }
@@ -71,13 +104,10 @@ config file. An example is show below:
 }
 ```
 
-_This file must be stored in your home directory or your current working directory._
+_Latz will also search in your current working directory for a `.latz.json` file and use this in your configuration.
+Files in the current working directory will be prioritized over your home directory location._
 
 To see other available image search backends, see [Available image search backends](#available-image-search-backends) below.
-
-### Usage
-
-
 
 ### Available image search backends
 

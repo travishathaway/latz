@@ -26,11 +26,11 @@ class SearchBackendHook(NamedTuple):
     **Example:**
 
     ```python
-    from latz.plugins import ImageAPIPlugin
+    from latz.plugins import SearchBackendHook
 
     @hookimpl
-    def image_api():
-        return ImageSearchHook(
+    def search_backend():
+        return SearchBackendHook(
             name="custom",
             ...
         )
@@ -71,17 +71,11 @@ class SearchBackendHook(NamedTuple):
     class CustomConfigFields(BaseModel):
         access_key: str = Field(description="Access key for the API")
 
-    CONFIG_FIELDS = {
-        PLUGIN_NAME: (
-            CustomConfigFields, {"access_key": ""}
-        )
-    }
-
     @hookimpl
     def image_api():
         return ImageAPIPlugin(
             name=PLUGIN_NAME,
-            config_fields=CONFIG_FIELDS,
+            config_fields=CustomConfigFields(access_key=""),
             ...
         )
     ```
