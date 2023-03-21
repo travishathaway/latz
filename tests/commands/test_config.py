@@ -39,7 +39,7 @@ def test_set_search_backends(runner: tuple[CliRunner, Path], mocker):
     Makes sure that we can  update the "search_backends" via the "config set" subcommand
     """
     cmd_runner, config_file = runner
-    mocker.patch("latz.commands.config.commands.CONFIG_FILE_CWD", config_file)
+    mocker.patch("latz.commands.config.commands.CONFIG_FILE_HOME_DIR", config_file)
     result = cmd_runner.invoke(cli, [COMMAND, "set", "search_backends=unsplash"])
 
     assert result.stdout == ""
@@ -78,7 +78,7 @@ def test_set_search_backend_settings(
     Makes sure that we can  update the "search_backend_settings" via the "config set" subcommand
     """
     cmd_runner, config_file = runner
-    mocker.patch("latz.commands.config.commands.CONFIG_FILE_CWD", config_file)
+    mocker.patch("latz.commands.config.commands.CONFIG_FILE_HOME_DIR", config_file)
     result = cmd_runner.invoke(cli, [COMMAND, "set", f"{parameter}={expected}"])
 
     assert result.stdout == ""
@@ -102,7 +102,7 @@ def test_set_bad_config_backend(runner: tuple[CliRunner, Path], mocker):
     Test the case when we try to pass in a bad value for "backend".
     """
     cmd_runner, config_file = runner
-    mocker.patch("latz.commands.config.commands.CONFIG_FILE_CWD", config_file)
+    mocker.patch("latz.commands.config.commands.CONFIG_FILE_HOME_DIR", config_file)
     result = cmd_runner.invoke(cli, [COMMAND, "set", "backend=bad_value"])
 
     assert result.exit_code == 2
@@ -122,7 +122,7 @@ def test_set_config_backend_with_bad_config_file(
     TODO: Break this into two tests
     """
     cmd_runner, config_file = runner
-    mocker.patch("latz.commands.config.commands.CONFIG_FILE_CWD", config_file)
+    mocker.patch("latz.commands.config.commands.CONFIG_FILE_HOME_DIR", config_file)
 
     with config_file.open("w") as fp:
         fp.write("bad val")
