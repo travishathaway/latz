@@ -1,22 +1,25 @@
 from __future__ import annotations
 
 import urllib.parse
-from contextlib import contextmanager
-from collections.abc import Iterator
 
 import httpx
-from httpx import Client, Headers
 from pydantic import BaseModel, Field
 
 from ...image import (
     ImageSearchResult,
     ImageSearchResultSet,
 )
-from .. import hookimpl, ImageAPIPlugin
-from ...exceptions import ImageAPIError
+from .. import hookimpl, SearchBackendHook
+from ...exceptions import SearchBackendError
 
 #: Name of the plugin that will be referenced in our configuration
 PLUGIN_NAME = "unsplash"
+
+#: Base URL for the Unsplash API
+BASE_URL = "https://api.unsplash.com/"
+
+#: Endpoint used for searching images
+SEARCH_ENDPOINT = urllib.parse.urljoin(BASE_URL, "/search/photos")
 
 
 class UnsplashBackendConfig(BaseModel):
@@ -29,81 +32,61 @@ class UnsplashBackendConfig(BaseModel):
     access_key: str = Field(description="Access key for the Unsplash API")
 
 
-#: These are the configuration settings we export when registering our plugin
-CONFIG_FIELDS = {PLUGIN_NAME: (UnsplashBackendConfig, {"access_key": ""})}
-
-#: Base URL for the Unsplash API
-BASE_URL = "https://api.unsplash.com/"
-
-#: Endpoint used for searching images
-SEARCH_ENDPOINT = "/search/photos"
-
-
-class UnsplashImageAPI:
+async def _get(client: httpx.AsyncClient, url: str, query: str) -> dict:
     """
-    Implementation of ImageAPI for use with the Unsplash API: https://unsplash.com/documentation
+    Wraps `client.get` call in a try, except so that we raise
+    an application specific exception instead.
+
+    :raises SearchBackendError: Encountered during problems querying the API
     """
+    try:
+        resp = await client.get(url, params={"query": query})
+        resp.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise SearchBackendError(str(exc), original=exc)
 
-    def __init__(self, client: Client):
-        """Attach an `httpx.Client` object to our API"""
-        self._client = client
+    json_data = resp.json()
 
-    def search(self, query: str) -> ImageSearchResultSet:
-        """
-        Find images based on a ``search_term`` and return an ``ImageSearchResultSet``
+    if not isinstance(json_data, dict):
+        raise SearchBackendError("Received malformed response from search backend")
 
-        :raises HTTPError: Encountered during problems querying the API
-        """
-        search_url = urllib.parse.urljoin(BASE_URL, SEARCH_ENDPOINT)
+    return json_data
 
-        try:
-            resp = self._client.get(search_url, params={"query": query})
-            resp.raise_for_status()
-        except httpx.HTTPError as exc:
-            raise ImageAPIError(str(exc), original=exc)
 
-        json_data = resp.json()
+async def search(client: httpx.AsyncClient, config, query: str) -> ImageSearchResultSet:
+    """
+    Find images based on a `query` and return an `ImageSearchResultSet`
 
-        if not isinstance(json_data, dict):
-            raise ImageAPIError("Received malformed response from search API")
+    :raises SearchBackendError: Encountered during problems querying the API
+    """
+    client.headers = httpx.Headers(
+        {
+            "Authorization": f"Client-ID {config.search_backend_settings.unsplash.access_key}"
+        }
+    )
+    json_data = await _get(client, SEARCH_ENDPOINT, query)
 
-        search_results = tuple(
-            ImageSearchResult(
-                url=record.get("links", {}).get("download"),
-                width=record.get("width"),
-                height=record.get("height"),
-            )
-            for record in json_data.get("results", tuple())
+    search_results = tuple(
+        ImageSearchResult(
+            url=record.get("links", {}).get("download"),
+            width=record.get("width"),
+            height=record.get("height"),
         )
-
-        return ImageSearchResultSet(search_results, json_data.get("total"))
-
-
-@contextmanager
-def unsplash_context_manager(config) -> Iterator[UnsplashImageAPI]:
-    """
-    Context manager that returns the ``UnsplashImageAPI`` we wish to use.
-    This specific context manager handles setting up and tearing down the ``httpx.Client``
-    connection that we use in this plugin.
-    """
-    client = Client()
-    client.headers = Headers(
-        {"Authorization": f"Client-ID {config.backend_settings.unsplash.access_key}"}
+        for record in json_data.get("results", tuple())
     )
 
-    try:
-        yield UnsplashImageAPI(client)
-    finally:
-        client.close()
+    return ImageSearchResultSet(
+        search_results, len(search_results), search_backend=PLUGIN_NAME
+    )
 
 
 @hookimpl
-def image_api():
+def search_backend():
     """
     Registers our Unsplash image API backend
     """
-    return ImageAPIPlugin(
+    return SearchBackendHook(
         name=PLUGIN_NAME,
-        image_api_context_manager=unsplash_context_manager,
-        config_fields=CONFIG_FIELDS,
+        search=search,
+        config_fields=UnsplashBackendConfig(access_key=""),
     )

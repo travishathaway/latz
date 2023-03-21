@@ -21,6 +21,7 @@ class ImageSearchResultSet(NamedTuple):
     """
     results: tuple[ImageSearchResult, ...]
     total_number_results: int | None
+    search_backend: str
 
 
 class ImageAPIContextManager(Protocol):

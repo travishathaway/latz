@@ -6,6 +6,14 @@ from typing import Any
 import click
 from pydantic import ValidationError
 
+from ...plugins.manager import (
+    SEARCH_BACKEND_SETTINGS_KEY,
+    SEARCH_BACKEND_SETTINGS_MODEL,
+)
+
+FIELD_SEPARATOR = "."
+VALUE_SEPARATOR = ","
+
 
 class ConfigValuesValidator:
     """
@@ -25,16 +33,19 @@ class ConfigValuesValidator:
         checked_values = {}
 
         for value in values:
-            checked_values.update(self.validate_single_value(value))
+            checked_values.update(
+                self.validate_single_value(value, ctx.obj.config_class)
+            )
 
         try:
-            ctx.obj.config_class(**{**current_config, **checked_values})
+            merge(checked_values, current_config)
+            ctx.obj.config_class(**current_config)
         except ValidationError as exc:
             raise click.ClickException(f"\n{str(exc)}")
 
-        return checked_values
+        return current_config
 
-    def validate_single_value(self, value: str) -> dict:
+    def validate_single_value(self, value: str, config_class) -> dict:
         """
         Validates a single config parameter. This is done by first matching the
         string value against a regex. Afterwards we return this value in its dictionary
@@ -47,9 +58,14 @@ class ConfigValuesValidator:
         if not match:
             raise click.BadParameter(self._format_bad_format_error(value))
 
-        parameter, value = match.groups()
+        parameter, parsed_value = match.groups()
+        schema = config_class.schema()
+        parameter_type = get_param_type(schema, parameter)
 
-        return get_nested_dict_from_path(parameter, value)
+        if parameter_type == tuple:
+            parsed_value = parsed_value.split(VALUE_SEPARATOR)
+
+        return get_nested_dict_from_path(parameter, parsed_value)
 
     @staticmethod
     def _format_bad_format_error(value):
@@ -58,9 +74,35 @@ class ConfigValuesValidator:
             " format."
         )
 
-    @staticmethod
-    def _format_invalid_parameter_error(parameter):
-        return f"'{parameter}' is not a valid configuration parameter"
+
+def get_param_type(schema, parameter: str) -> type | None:
+    """
+    Tries to determine the parameter type based on the schema and the parameter name.
+
+    TODO: This is currently
+    """
+    first_key, *other_keys = parameter.split(FIELD_SEPARATOR)
+
+    if first_key == SEARCH_BACKEND_SETTINGS_KEY:
+        second_key, *other_keys = other_keys
+        backend_setting_schema = schema.get("definitions", {}).get(
+            SEARCH_BACKEND_SETTINGS_MODEL
+        )
+        if backend_setting_schema is not None:
+            default = (
+                backend_setting_schema.get("properties", {})
+                .get(second_key, {})
+                .get("default")
+            )
+            if default is not None:
+                third_key, *other_keys = other_keys
+                return type(default.get(third_key))
+    else:
+        default = schema.get("properties", {}).get(first_key, {}).get("default")
+        if default is not None:
+            return type(default)
+
+    raise click.BadParameter(f"'{parameter}' is not a valid configuration parameter")
 
 
 def get_dotted_path_value(nest: dict, dotted_path: str) -> Any:
@@ -75,7 +117,7 @@ def get_dotted_path_value(nest: dict, dotted_path: str) -> Any:
     >>> get_dotted_path_value({"a": {"b": {"c": 1}}}, "d.c.b.a")
 
     """
-    dotted_path_split = dotted_path.split(".")
+    dotted_path_split = dotted_path.split(FIELD_SEPARATOR)
     current_nest = nest
 
     for key_val in dotted_path_split:
@@ -117,5 +159,19 @@ def get_nested_dict_from_path(path: str, value: Any) -> dict:
 
         return nested_dict
 
-    parts = path.split(".")
+    parts = path.split(FIELD_SEPARATOR)
     return _inner(parts, value)
+
+
+def merge(source, destination):
+    """
+    Recursively merges a dictionary.
+    """
+    for key, value in source.items():
+        if isinstance(value, dict):
+            node = destination.setdefault(key, {})
+            merge(value, node)
+        else:
+            destination[key] = value
+
+    return destination

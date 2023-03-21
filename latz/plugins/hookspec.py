@@ -1,27 +1,21 @@
-from collections.abc import Iterable, Mapping
-from typing import NamedTuple, Any, ContextManager
+from collections.abc import Iterable, Awaitable
+from typing import NamedTuple, Any
 from collections.abc import Callable
 
+import httpx
 import pluggy  # type: ignore
 from pydantic import BaseModel
 
 from latz.constants import APP_NAME
-from latz.image import ImageAPI
+from latz.image import ImageSearchResultSet
 
 hookspec = pluggy.HookspecMarker(APP_NAME)
 hookimpl = pluggy.HookimplMarker(APP_NAME)
 
-DefaultValues = Mapping[str, Any]
-ConfigFields = Mapping[str, tuple[type[BaseModel], DefaultValues]]
 
-
-class ImageAPIPlugin(NamedTuple):
+class SearchBackendHook(NamedTuple):
     """
-    Holds the metadata, config fields and context manager for the image search backend.
-
-    Check out the [creating plugins][creating-plugins] for more information on writing
-    plugins for latz.
-
+    Holds the metadata and callable for using the image search hook.
     """
 
     name: str
@@ -36,7 +30,7 @@ class ImageAPIPlugin(NamedTuple):
 
     @hookimpl
     def image_api():
-        return ImageAPIPlugin(
+        return ImageSearchHook(
             name="custom",
             ...
         )
@@ -46,8 +40,8 @@ class ImageAPIPlugin(NamedTuple):
 
     ```json
     {
-      "backend": "custom",
-      "backend_settings": {
+      "search_backends": ["custom"],
+      "search_backend_settings": {
         "custom": {
           "param_one": "value"
         }
@@ -56,42 +50,12 @@ class ImageAPIPlugin(NamedTuple):
     ```
     """
 
-    image_api_context_manager: Callable[[Any], ContextManager[ImageAPI]]
+    search: Callable[[httpx.AsyncClient, Any, str], Awaitable[ImageSearchResultSet]]
     """
-    Context manager for setting up and tearing down any connections as well returning
-    an [`ImageAPI`][latz.image.ImageAPI] object to use for querying.
-
-    **Example:**
-
-    ```python
-    from contextlib import contextmanager
-
-    import httpx
-    from latz.plugins import ImageAPIPlugin
-
-    class CustomSearchAPI:
-        ...
-
-    @contextmanager
-    def image_api_context_manager(config) -> Iterator[CustomSearchAPI]:
-        client = httpx.Client()
-
-        try:
-            yield CustomSearchAPI(client)
-        finally:
-            client.close()
-
-    @hookimpl
-    def image_api():
-        return ImageAPIPlugin(
-            name="custom",
-            image_api_context_manager=image_api_context_manager,
-            ...
-        )
-    ```
+    Callable that implements the search hook.
     """
 
-    config_fields: ConfigFields
+    config_fields: BaseModel
     """
     Mapping defining the namespace for the config parameters, the pydantic
     model to use and the default values it should contain.
@@ -128,11 +92,11 @@ class AppHookSpecs:
     """Holds all hookspecs for this application"""
 
     @hookspec
-    def image_api(self) -> Iterable[ImageAPIPlugin]:
+    def search_backend(self) -> Iterable[SearchBackendHook]:
         """
-        Hookspec for the image API.
+        Hookspec for the search backend hook.
 
         Check out the [creating plugins][creating-plugins] guide for more information on
         using this plugin hook.
         """
-        return tuple()  # default implementation returns no registered backends
+        return tuple()

@@ -1,11 +1,20 @@
-from collections.abc import Callable
-from typing import cast, ContextManager, Any
+import asyncio
+from collections.abc import Iterable, Callable
+from functools import partial
 
 import click
 from rich import print as rprint
 
-from latz.image import ImageAPI
-from latz.exceptions import ImageAPIError
+from latz import fetch
+
+
+async def main(search_callables: Iterable[Callable]):
+    """
+    Main async coroutine that runs all the currently configured search functions
+    and prints the output of the query.
+    """
+    results = await fetch.gather_results(search_callables)
+    rprint(results)
 
 
 @click.command("search")
@@ -15,15 +24,14 @@ def command(ctx, query: str):
     """
     Command that retrieves an image based on a search term
     """
-    image_api_context_manager = cast(
-        Callable[[Any], ContextManager[ImageAPI]], ctx.obj.image_api_context_manager
+    client = fetch.get_async_client()
+    search_backends = ctx.obj.plugin_manager.get_configured_search_backends(
+        ctx.obj.config
     )
 
-    with image_api_context_manager(ctx.obj.config) as api:
-        try:
-            result_set = api.search(query)
-        except ImageAPIError as exc:
-            raise click.ClickException(str(exc))
+    search_callables = (
+        partial(backend.search, client, ctx.obj.config, query)
+        for backend in search_backends
+    )
 
-        for res in result_set.results:
-            rprint(res)
+    asyncio.run(main(search_callables))

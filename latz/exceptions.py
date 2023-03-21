@@ -2,7 +2,8 @@
 Our exception hierarchy:
 
 * LatzError
-    - ImageAPIError
+    - SearchBackendError
+    - ConfigError
 """
 from __future__ import annotations
 
@@ -11,7 +12,7 @@ class LatzError(Exception):
     """Base exception for all latz errors"""
 
 
-class ImageAPIError(Exception):
+class SearchBackendError(LatzError):
     """
     Exception used for raising while encountering issues during image API operations
     """
@@ -21,5 +22,5 @@ class ImageAPIError(Exception):
         self.original = original
 
 
-class ConfigError(Exception):
+class ConfigError(LatzError):
     pass

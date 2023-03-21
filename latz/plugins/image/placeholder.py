@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 from typing import Literal
 from urllib.parse import urljoin
 
@@ -8,7 +7,7 @@ from ...image import (
     ImageSearchResult,
     ImageSearchResultSet,
 )
-from .. import hookimpl, ImageAPIPlugin
+from .. import hookimpl, SearchBackendHook
 
 #: Name of the plugin that will be referenced in our configuration
 PLUGIN_NAME = "placeholder"
@@ -26,50 +25,32 @@ class PlaceholderBackendConfig(BaseModel):
     )
 
 
-CONFIG_FIELDS = {PLUGIN_NAME: (PlaceholderBackendConfig, {"type": "kitten"})}
+async def search(client, config, query: str) -> ImageSearchResultSet:
+    placeholder_type = config.search_backend_settings.placeholder.type
+    base_url = f"https://place{placeholder_type}.com"
+    sizes = ((200, 300), (600, 500), (1000, 800))
 
-
-class PlaceholderImageAPI:
-    """
-    Used primarily to test and when we want to run the program without
-    hitting any search endpoints.
-    """
-
-    def __init__(self, placeholder_type: str):
-        self._placeholder_type = placeholder_type.lower()
-        self._base_url = f"https://place{self._placeholder_type}.com"
-
-    def search(self, query: str) -> ImageSearchResultSet:
-        sizes = ((200, 300), (600, 500), (1000, 800))
-
-        results = tuple(
-            ImageSearchResult(
-                url=urljoin(self._base_url, f"{width}/{height}"),
-                width=width,
-                height=height,
-            )
-            for width, height in sizes
+    results = tuple(
+        ImageSearchResult(
+            url=urljoin(base_url, f"{width}/{height}"),
+            width=width,
+            height=height,
         )
+        for width, height in sizes
+    )
 
-        return ImageSearchResultSet(results=results, total_number_results=len(results))
-
-
-@contextmanager
-def placeholder_context_manager(config):
-    """Context manager for the PlaceholderImageAPI"""
-
-    placeholder_type = config.backend_settings.placeholder.type
-
-    yield PlaceholderImageAPI(placeholder_type)
+    return ImageSearchResultSet(
+        results=results, total_number_results=len(results), search_backend=PLUGIN_NAME
+    )
 
 
 @hookimpl
-def image_api():
+def search_backend():
     """
     Registers our Unsplash image API backend
     """
-    return ImageAPIPlugin(
+    return SearchBackendHook(
         name=PLUGIN_NAME,
-        image_api_context_manager=placeholder_context_manager,
-        config_fields=CONFIG_FIELDS,
+        search=search,
+        config_fields=PlaceholderBackendConfig(),
     )
