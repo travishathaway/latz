@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field
 
 from ...image import (
     ImageSearchResult,
-    ImageSearchResultSet,
 )
 from .. import hookimpl, SearchBackendHook
 
@@ -15,9 +14,8 @@ PLUGIN_NAME = "placeholder"
 
 class PlaceholderBackendConfig(BaseModel):
     """
-    Unsplash requires the usage of an ``access_key`` and ``secret_key``
-    when using their API. We expose these settings here so users of the CLI
-    tool can use it.
+    Configuration for the placeholder backend. Currently only supports "bear"
+    or "kitten".
     """
 
     type: Literal["bear", "kitten"] = Field(
@@ -25,32 +23,31 @@ class PlaceholderBackendConfig(BaseModel):
     )
 
 
-async def search(client, config, query: str) -> ImageSearchResultSet:
+async def search(client, config, query: str) -> tuple[ImageSearchResult, ...]:
+    """
+    Search function for placeholder backend. It only returns three pre-defined
+    search results. This is primarily meant for testing and demonstration purposes.
+    """
     placeholder_type = config.search_backend_settings.placeholder.type
     base_url = f"https://place{placeholder_type}.com"
     sizes = ((200, 300), (600, 500), (1000, 800))
 
-    results = tuple(
+    return tuple(
         ImageSearchResult(
             url=urljoin(base_url, f"{width}/{height}"),
             width=width,
             height=height,
+            search_backend=PLUGIN_NAME,
         )
         for width, height in sizes
-    )
-
-    return ImageSearchResultSet(
-        results=results, total_number_results=len(results), search_backend=PLUGIN_NAME
     )
 
 
 @hookimpl
 def search_backend():
     """
-    Registers our Unsplash image API backend
+    Registers our placeholder search backend
     """
     return SearchBackendHook(
-        name=PLUGIN_NAME,
-        search=search,
-        config_fields=PlaceholderBackendConfig(),
+        name=PLUGIN_NAME, search=search, config_fields=PlaceholderBackendConfig()
     )

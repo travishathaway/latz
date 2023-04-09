@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 
 from ...image import (
     ImageSearchResult,
-    ImageSearchResultSet,
 )
 from .. import hookimpl, SearchBackendHook
 from ...exceptions import SearchBackendError
@@ -53,30 +52,26 @@ async def _get(client: httpx.AsyncClient, url: str, query: str) -> dict:
     return json_data
 
 
-async def search(client: httpx.AsyncClient, config, query: str) -> ImageSearchResultSet:
+async def search(
+    client: httpx.AsyncClient, config, query: str
+) -> tuple[ImageSearchResult, ...]:
     """
-    Find images based on a `query` and return an `ImageSearchResultSet`
+    Find images based on a `query` and return a tuple of `ImageSearchResult` objects.
 
     :raises SearchBackendError: Encountered during problems querying the API
     """
-    client.headers = httpx.Headers(
-        {
-            "Authorization": f"Client-ID {config.search_backend_settings.unsplash.access_key}"
-        }
-    )
+    access_key = config.search_backend_settings.unsplash.access_key
+    client.headers = httpx.Headers({"Authorization": f"Client-ID {access_key}"})
     json_data = await _get(client, SEARCH_ENDPOINT, query)
 
-    search_results = tuple(
+    return tuple(
         ImageSearchResult(
             url=record.get("links", {}).get("download"),
             width=record.get("width"),
             height=record.get("height"),
+            search_backend=PLUGIN_NAME,
         )
         for record in json_data.get("results", tuple())
-    )
-
-    return ImageSearchResultSet(
-        search_results, len(search_results), search_backend=PLUGIN_NAME
     )
 
 

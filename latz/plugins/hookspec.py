@@ -7,7 +7,7 @@ import pluggy  # type: ignore
 from pydantic import BaseModel
 
 from latz.constants import APP_NAME
-from latz.image import ImageSearchResultSet
+from latz.image import ImageSearchResult
 
 hookspec = pluggy.HookspecMarker(APP_NAME)
 hookimpl = pluggy.HookimplMarker(APP_NAME)
@@ -50,15 +50,16 @@ class SearchBackendHook(NamedTuple):
     ```
     """
 
-    search: Callable[[httpx.AsyncClient, Any, str], Awaitable[ImageSearchResultSet]]
+    search: Callable[
+        [httpx.AsyncClient, Any, str], Awaitable[tuple[ImageSearchResult, ...]]
+    ]
     """
     Callable that implements the search hook.
     """
 
     config_fields: BaseModel
     """
-    Mapping defining the namespace for the config parameters, the pydantic
-    model to use and the default values it should contain.
+    Pydantic model that defines all the settings that this plugin needs.
 
     **Example:**
 

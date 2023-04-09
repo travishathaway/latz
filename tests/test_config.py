@@ -29,8 +29,8 @@ def test_non_existent_config_file(
     mock_client_get = mocker.patch("latz.plugins.image.unsplash._get", return_value={})
     result = runner_with_non_existent_config_file.invoke(cli, ["search", "ladder"])
 
-    assert "ImageSearchResultSet" in result.stdout
-    assert "total_number_results=0" in result.stdout
+    assert "Link" in result.stdout
+    assert "Backend" in result.stdout
     assert result.exit_code == 0
     assert len(mock_client_get.mock_calls) == 1
 

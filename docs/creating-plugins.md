@@ -108,8 +108,8 @@ class ImgurBackendConfig(BaseModel):
 
 Now that our plugin is able to gather the configuration settings necessary to run (i.e. the
 "access_key" we get from Imgur), we are ready to write the actual search API code. To make this
-work, we need to define an async search function that returns an `ImageSearchResultSet`.
-Latz will pass an instance of the [httpx.AsyncClient][httpx-async-client], the application
+work, we need to define an async search function that returns a `tuple` of `ImageSearchResult`
+objects. Latz will pass an instance of the [httpx.AsyncClient][httpx-async-client], the application
 configuration and the search query to this function for us.
 
 Below is an example of what this could look like:
@@ -123,7 +123,7 @@ import urllib.parse
 import httpx
 
 from latz.exceptions import SearchBackendError
-from latz.image import ImageSearchResultSet, ImageSearchResult
+from latz.image import ImageSearchResult
 
 #: Base URL for the Imgur API
 BASE_URL = "https://api.imgur.com/3/"
@@ -131,7 +131,7 @@ BASE_URL = "https://api.imgur.com/3/"
 #: Endpoint used for searching images
 SEARCH_ENDPOINT = urllib.parse.urljoin(BASE_URL, "gallery/search")
 
-async def search(client, config, query: str) -> ImageSearchResultSet: # (1)
+async def search(client, config, query: str) -> tuple[ImageSearchResult, ...]: # (1)
     """
     Search hook that will be invoked by latz while invoking the "search" command
     """
@@ -140,7 +140,7 @@ async def search(client, config, query: str) -> ImageSearchResultSet: # (1)
     })
     json_data = await _get(client, SEARCH_ENDPOINT, query)
 
-    search_results = tuple(
+    return tuple(
         ImageSearchResult(  # (2)
             url=record_image.get("link"),
             width=record_image.get("width"),
@@ -150,9 +150,6 @@ async def search(client, config, query: str) -> ImageSearchResultSet: # (1)
         for record_image in record.get("images", tuple())
     )
 
-    return ImageSearchResultSet(
-        search_results, len(search_results), search_backend=PLUGIN_NAME
-    )
 
 async def _get(client: httpx.AsyncClient, url: str, query: str) -> dict:
     """
@@ -218,8 +215,8 @@ were:
 
 1. Creating our configuration fields, so we can allow users of the plugin to define necessary
    access tokens
-2. Creating the `search` function which returns an [`ImageSearchResultSet`][latz.image.ImageSearchResultSet]
-   object.
+2. Creating the `search` function which returns a `tuple` of [`ImageSearchResult`][latz.image.ImageSearchResult]
+   objects.
 3. Tying everything together by creating an `search_backend` function decorated by `latz.plugins.hookimpl`.
    This function's only responsibility is to return an [`SearchBackendHook`][latz.plugins.hookspec.SearchBackendHook]
    object that combines everything we have written in this module so far.
