@@ -13,7 +13,7 @@ from latz.image import ImageSearchResult
 
 def display_results(results: Iterable[ImageSearchResult]) -> None:
     """
-    Displays the `ImageSearchResultSet` objects as a `rich.table.Table`
+    Displays the `ImageSearchResult` objects as a `rich.table.Table`
     """
     table = Table(title="Search Results")
 
