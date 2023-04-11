@@ -67,20 +67,11 @@ Once this is configured, you can search Unsplash for bunny pictures:
 
 ```bash
 $ latz search "bunny"
-[
-    ImageSearchResultSet(
-        results=(
-            ImageSearchResult(
-                url='https://unsplash.com/photos/u_kMWN-BWyU/download?ixid=MnwzOTMwOTR8MHwxfHNlYXJjaHwxfHxidW5ueXxlbnwwfHx8fDE2Nzk0MTA2NzQ',
-                width=3456,
-                height=5184
-            ),
-            # ... results truncated
-        ),
-        total_number_results=10,
-        search_backend='unsplash'
-    )
-]
+┏━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┓
+┃ #  ┃ Link                                                ┃  Backend ┃
+┡━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━┩
+│ 1  │ https://unsplash.com/photos/hcxqLJjI99E/download?i… │ unsplash │
+└────┴─────────────────────────────────────────────────────┴──────────┘
 ```
 
 ### Configuring
