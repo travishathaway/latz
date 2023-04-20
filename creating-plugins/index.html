@@ -1,0 +1,687 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../cli_reference/">
+      
+      
+        <link rel="next" href="../plugin_api_reference/">
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.6">
+    
+    
+      
+        <title>Creating Plugins - latz</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ded33207.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#creating-plugins" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="latz" class="md-header__button md-logo" aria-label="latz" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            latz
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Creating Plugins
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/travishathaway/latz" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    travishathaway/latz
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="latz" class="md-nav__button md-logo" aria-label="latz" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    latz
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/travishathaway/latz" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    travishathaway/latz
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_reference/" class="md-nav__link">
+        CLI Reference
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Creating Plugins
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Creating Plugins
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-up-our-environment" class="md-nav__link">
+    Setting up our environment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-the-plugin" class="md-nav__link">
+    Create the plugin
+  </a>
+  
+    <nav class="md-nav" aria-label="Create the plugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugin-configuration" class="md-nav__link">
+    Plugin configuration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#search-backend-hook-function" class="md-nav__link">
+    Search backend hook function
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registering-everything-with-latz" class="md-nav__link">
+    Registering everything with latz
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wrapping-up" class="md-nav__link">
+    Wrapping up
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugin_api_reference/" class="md-nav__link">
+        Plugin API Reference
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setting-up-our-environment" class="md-nav__link">
+    Setting up our environment
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-the-plugin" class="md-nav__link">
+    Create the plugin
+  </a>
+  
+    <nav class="md-nav" aria-label="Create the plugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugin-configuration" class="md-nav__link">
+    Plugin configuration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#search-backend-hook-function" class="md-nav__link">
+    Search backend hook function
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registering-everything-with-latz" class="md-nav__link">
+    Registering everything with latz
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wrapping-up" class="md-nav__link">
+    Wrapping up
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="creating-plugins">Creating Plugins</h1>
+<p>This guide will show you how to create your own latz search backend hook.
+These search backend hooks allow you to add additional image search APIs to latz.
+Once complete, you will be able to use these new search backends with the <code>latz search</code>
+command.</p>
+<p>Check out <a href="https://github.com/travishathaway/latz-imgur">latz-imgur on GitHub</a> if you would like to skip ahead and browse
+the final working example.</p>
+<h2 id="requirements">Requirements</h2>
+<p>To follow along, you will need to create an Imgur account and register an application
+via their web interface. Once complete, save the <code>client_id</code> you receive as we will be using
+that for this application. Head over to <a href="https://apidocs.imgur.com/">their documentation</a> for more information.</p>
+<p>For managing dependencies and to make it easier to publish to PyPI later, we use the tool
+<a href="https://python-poetry.org/">poetry</a>. Please install and configure this if you do not currently have it on your computer.</p>
+<h2 id="setting-up-our-environment">Setting up our environment</h2>
+<p>The first steps necessary are creating a directory for our project and adding a <code>pyproject.toml</code>
+file. To do so, we run the following commands:</p>
+<div class="highlight"><pre><span></span><code>mkdir<span class="w"> </span>latz-imgur<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>latz-imgur
+
+poetry<span class="w"> </span>init<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--name<span class="o">=</span>latz-imgur<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--description<span class="o">=</span><span class="s2">&quot;Imgur plugin for latz&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--author<span class="o">=</span><span class="s2">&quot;Your name &lt;your-email@example.com&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--python<span class="o">=</span><span class="s2">&quot;^3.10&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--dependency<span class="o">=</span><span class="s2">&quot;latz&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--dependency<span class="o">=</span><span class="s2">&quot;pydantic&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--dependency<span class="o">=</span><span class="s2">&quot;httpx&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--no-interaction
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The extra dependencies we install are <code>latz</code>, <code>pydantic</code> and <code>httpx</code>. You will see exactly how we
+use all three of these dependencies below.</p>
+</div>
+<p>Now that we have a directory and a <code>pyproject.toml</code> file, we can use the following commands to initialize
+our development environment:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install project dependencies including &quot;latz&quot;</span>
+poetry<span class="w"> </span>install
+
+<span class="c1"># Start a shell where we have access to all of our project dependencies</span>
+poetry<span class="w"> </span>shell
+</code></pre></div>
+<h2 id="create-the-plugin">Create the plugin</h2>
+<p>At this point, you can open the folder (<code>latz-imgur</code> in our example) with your favorite
+IDE or text editor. The first thing we need to do is create a Python module called <code>latz_imgur</code>
+at the top of the directory structure. Be sure this folder contains an <code>__init__.py</code> file
+so that it is recognized as a Python module 😉.</p>
+<p>In that new Python module, we create a file called <code>main.py</code>.  This file will contain all the
+code necessary for our Imgur plugin. Below, we go through each section of this file. Feel free
+to incrementally add to this file as your go along or download the full version
+here: <a href="https://github.com/travishathaway/latz-imgur/blob/main/latz_imgur/main.py">latz_imgur/main.py</a>.</p>
+<h3 id="plugin-configuration">Plugin configuration</h3>
+<p>Each new image API plugin may require a different set of settings. Latz recognizes this and
+therefore allows you to dynamically add any new settings you wish. For our application, we add
+the required <code>access_key</code> setting that the Imgur API requires.</p>
+<p>We define these extra settings as <a href="https://docs.pydantic.dev/">pydantic</a> models.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="c1"># Module level constant declaring the name of our plugin</span>
+<span class="n">PLUGIN_NAME</span> <span class="o">=</span> <span class="s2">&quot;imgur&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">ImgurBackendConfig</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Imgur requires the usage of an ``access_key`` when using their API.</span>
+<span class="sd">    We expose these settings here so users of the CLI tool can configure it</span>
+<span class="sd">    themselves.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">access_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Access key for the Imgur API&quot;</span><span class="p">)</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Latz uses this <code>ImgurBackendConfig</code> model to dynamically generate its own <code>AppConfig</code>
+model at runtime. Check out <a href="https://docs.pydantic.dev/usage/models/#dynamic-model-creation">Dynamic model creation</a> in the
+<a href="https://docs.pydantic.dev/">pydantic docs</a> to learn more.</p>
+</div>
+<h3 id="search-backend-hook-function">Search backend hook function</h3>
+<p>Now that our plugin is able to gather the configuration settings necessary to run (i.e. the
+"access_key" we get from Imgur), we are ready to write the actual search API code. To make this
+work, we need to define an async search function that returns a <code>tuple</code> of <code>ImageSearchResult</code>
+objects. Latz will pass an instance of the <a href="https://www.python-httpx.org/api/#asyncclient">httpx.AsyncClient</a>, the application
+configuration and the search query to this function for us.</p>
+<p>Below is an example of what this could look like:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Click on the tool tips in the code to learn more <img alt="🤔" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/1f914.svg" title=":thinking:" /> <img alt="📚" class="twemoji" src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@14.1.2/assets/svg/1f4da.svg" title=":books:" /></p>
+</div>
+<div class="highlight"><span class="filename">latz_imgur/main.py</span><pre><span></span><code><span class="kn">import</span> <span class="nn">urllib.parse</span>
+
+<span class="kn">import</span> <span class="nn">httpx</span>
+
+<span class="kn">from</span> <span class="nn">latz.exceptions</span> <span class="kn">import</span> <span class="n">SearchBackendError</span>
+<span class="kn">from</span> <span class="nn">latz.image</span> <span class="kn">import</span> <span class="n">ImageSearchResult</span>
+
+<span class="c1">#: Base URL for the Imgur API</span>
+<span class="n">BASE_URL</span> <span class="o">=</span> <span class="s2">&quot;https://api.imgur.com/3/&quot;</span>
+
+<span class="c1">#: Endpoint used for searching images</span>
+<span class="n">SEARCH_ENDPOINT</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">parse</span><span class="o">.</span><span class="n">urljoin</span><span class="p">(</span><span class="n">BASE_URL</span><span class="p">,</span> <span class="s2">&quot;gallery/search&quot;</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ImageSearchResult</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span> <span class="c1"># (1)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Search hook that will be invoked by latz while invoking the &quot;search&quot; command</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Headers</span><span class="p">({</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Client-ID </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">search_backend_settings</span><span class="o">.</span><span class="n">imgur</span><span class="o">.</span><span class="n">access_key</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">})</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="k">await</span> <span class="n">_get</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">SEARCH_ENDPOINT</span><span class="p">,</span> <span class="n">query</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">ImageSearchResult</span><span class="p">(</span>  <span class="c1"># (2)</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">record_image</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;link&quot;</span><span class="p">),</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">record_image</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;width&quot;</span><span class="p">),</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">record_image</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;height&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">json_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">record_image</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;images&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">())</span>
+    <span class="p">)</span>
+
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">_get</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wraps `client.get` call in a try, except so that we raise</span>
+<span class="sd">    an application specific exception instead.</span>
+
+<span class="sd">    :raises SearchBackendError: Encountered during problems querying the API</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">})</span>
+        <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">httpx</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SearchBackendError</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">exc</span><span class="p">),</span> <span class="n">original</span><span class="o">=</span><span class="n">exc</span><span class="p">)</span>
+
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">SearchBackendError</span><span class="p">(</span><span class="s2">&quot;Received malformed response from search backend&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">json_data</span>
+</code></pre></div>
+<ol>
+<li>The arguments passed to this function give you everything you need to make a search
+   request. The <code>client</code> is a <a href="https://www.python-httpx.org/api/#asyncclient">httpx.AsyncClient</a>, the <code>config</code> object
+   is the application configuration and the <code>query</code> string is the search string passed in
+   from the command line.</li>
+<li><a class="autorefs autorefs-internal" href="../plugin_api_reference/#latz.image.ImageSearchResult"><code>ImageSearchResult</code></a> is a special type defined by latz.
+   Using this type helps ensure the result you return will be properly rendered.</li>
+</ol>
+<h3 id="registering-everything-with-latz">Registering everything with latz</h3>
+<p>We are now at the final step: registering everything we have written with latz. To do this,
+we need to use the <code>latz.plugins.hookimpl</code> decorator to register our plugins. We do this
+by decorating a function called <code>search_backend</code> that returns a <code>SearchBackendHook</code> object.
+The <code>SearchBackendHook</code> object is an object which has three fields:</p>
+<ul>
+<li><code>name</code>: name of the plugin that users will use to specify it their configuration</li>
+<li><code>search</code>: async function that will be called to search for images</li>
+<li><code>config_fields</code>: Pydantic model representing the config fields we want to expose in the
+   application</li>
+</ul>
+<p>Here is what this function looks like:</p>
+<div class="highlight"><span class="filename">latz_imgur/main.py</span><pre><span></span><code><span class="kn">from</span> <span class="nn">latz.plugins</span> <span class="kn">import</span> <span class="n">hookimpl</span><span class="p">,</span> <span class="n">SearchBackendHook</span>
+
+<span class="nd">@hookimpl</span>
+<span class="k">def</span> <span class="nf">search_backend</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers our Imgur image API backend</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">SearchBackendHook</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">PLUGIN_NAME</span><span class="p">,</span>
+        <span class="n">search</span><span class="o">=</span><span class="n">search</span><span class="p">,</span>
+        <span class="n">config_fields</span><span class="o">=</span><span class="n">ImgurBackendConfig</span><span class="p">(</span><span class="n">access_key</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+</code></pre></div>
+<h2 id="wrapping-up">Wrapping up</h2>
+<p>In this guide, we showed how to create a latz search backend hook. The most important steps
+were:</p>
+<ol>
+<li>Creating our configuration fields, so we can allow users of the plugin to define necessary
+   access tokens</li>
+<li>Creating the <code>search</code> function which returns a <code>tuple</code> of <a class="autorefs autorefs-internal" href="../plugin_api_reference/#latz.image.ImageSearchResult"><code>ImageSearchResult</code></a>
+   objects.</li>
+<li>Tying everything together by creating an <code>search_backend</code> function decorated by <code>latz.plugins.hookimpl</code>.
+   This function's only responsibility is to return an <a class="autorefs autorefs-internal" href="../plugin_api_reference/#latz.plugins.hookspec.SearchBackendHook"><code>SearchBackendHook</code></a>
+   object that combines everything we have written in this module so far.</li>
+</ol>
+<p>Thanks for following along and happy plugin writing ✌️</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.annotate"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51198bba.min.js"></script>
+      
+    
+  </body>
+</html>
