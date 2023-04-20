@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 from collections.abc import Iterable, Callable
 from functools import partial
@@ -28,12 +30,15 @@ def display_results(results: Iterable[ImageSearchResult]) -> None:
     console.print(table)
 
 
-async def main(search_callables: Iterable[Callable]):
+async def main(search_callables: Iterable[Callable], limit: int | None = None):
     """
     Main async coroutine that runs all the currently configured search functions
     and prints the output of the query.
     """
     results = await fetch.gather_results(search_callables)
+
+    if limit is not None:
+        results = tuple(res[:limit] for res in results)
 
     # merge results sets into single tuple
     results = tuple(chain(*results))
@@ -43,8 +48,9 @@ async def main(search_callables: Iterable[Callable]):
 
 @click.command("search")
 @click.argument("query")
+@click.option("--limit", "-l", type=int)
 @click.pass_context
-def command(ctx, query: str):
+def command(ctx, query: str, limit: int):
     """
     Command that retrieves an image based on a search term
     """
@@ -63,4 +69,4 @@ def command(ctx, query: str):
     )
 
     # This is the function call that kicks everything off
-    asyncio.run(main(search_callables))
+    asyncio.run(main(search_callables, limit=limit))

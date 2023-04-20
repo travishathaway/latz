@@ -1,0 +1,51 @@
+{% set name = "latz" %}
+{% set version = "0.2.1" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/latz-{{ version }}.tar.gz
+  sha256: f2064d9589c8554cd3c35ab48ffa71bd3005b541227358c42b6531fa5dc573c0
+
+build:
+  entry_points:
+    - latz = latz.cli:cli
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv
+  number: 0
+
+requirements:
+  host:
+    - python >=3.8,<4.0
+    - poetry-core
+    - pip
+  run:
+    - python >=3.8.1,<4.0.0
+    - pydantic >=1.10.7,<2.0.0
+    - httpx >=0.23.1,<0.24.0
+    - pillow >=9.3.0,<10.0.0
+    - rich >=13.3.3,<14.0.0
+    - rich-click >=1.6.0,<2.0.0
+    - click >=8.1.3,<9.0.0
+    - pluggy >=1.0.0,<2.0.0
+
+test:
+  imports:
+    - latz
+  commands:
+    - pip check
+    - latz --help
+  requires:
+    - pip
+
+about:
+  home: None
+  summary: CLI Program for downloading images. Maybe by location too...
+  license: GPL-3.0
+  license_file: LICENSE
+
+extra:
+  recipe-maintainers:
+    - travishathaway
