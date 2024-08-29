@@ -6,7 +6,7 @@
 [rich]: https://rich.readthedocs.io/
 [anaconda.org]: https://anaconda.org
 [latz-imgur]: https://github.com/travishathaway/latz-imgur
-[creating-plugins]: creating-plugins
+[creating-plugins]: https://travishathaway.github.io/latz/creating-plugins/
 
 This is a command line tool used for retrieving images from various image
 search backends (e.g. Unsplash, Google). This tool is primarily developed for educational purposes
