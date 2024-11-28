@@ -11,7 +11,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: Ubuntu-20.04
     strategy:
       matrix:
         python-version: ["3.10"]
@@ -31,6 +31,8 @@ jobs:
           conda update -n base -c defaults conda
           conda env update --file environment.yml --name base
           conda install --file requirements.dev.txt
+          conda --version
+          conda install --yes -c conda-forge mamba
       - name: Install latz
         run: |
           pip install -e .
